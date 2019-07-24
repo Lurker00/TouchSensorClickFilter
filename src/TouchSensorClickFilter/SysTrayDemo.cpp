@@ -28,7 +28,23 @@ int APIENTRY _tWinMain(HINSTANCE hInstance,
                        int       nCmdShow)
 {
     UNREFERENCED_PARAMETER(hPrevInstance);
-    UNREFERENCED_PARAMETER(lpCmdLine);
+    if (_tcscmp(lpCmdLine, _T("demonize")) == 0)
+    { // "Fork" itself and quit
+        STARTUPINFO si = { sizeof(si) };
+        PROCESS_INFORMATION pi;
+        TCHAR const* pgmptr =
+#ifdef _UNICODE
+            _wpgmptr;
+#else
+            _pgmptr;
+#endif
+        if (CreateProcess(pgmptr, NULL, NULL, NULL, FALSE, 0, NULL, NULL, &si, &pi))
+        {
+            CloseHandle(pi.hProcess);
+            CloseHandle(pi.hThread);
+        }
+        return 0;
+    }
 
     // Initialize global strings
     LoadString(hInstance, IDS_APP_TITLE, szTitle, MAX_LOADSTRING);
