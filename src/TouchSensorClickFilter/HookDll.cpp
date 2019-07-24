@@ -24,7 +24,11 @@ public:
     ~LoggerImpl()
     {
 #if _DEBUG
-        if (fLog) fclose(fLog);
+        if (fLog)
+        {
+            Log("Stopped");
+            fclose(fLog);
+        }
 #endif
     }
 
@@ -35,6 +39,7 @@ public:
         if (!fLog) return;
         fprintf(fLog, "[%10u] ", ::GetTickCount());
         fprintf(fLog, args...);
+        fprintf(fLog, "\n");
         fflush(fLog);
 #endif
     }
@@ -67,7 +72,7 @@ private:
         {
             ::DeleteTimerQueueTimer(NULL, Timer, NULL);
             Timer = NULL;
-            Log("Timer removed\n");
+            Log("Timer removed");
         }
     }
 
@@ -116,7 +121,7 @@ static LRESULT CALLBACK LowLevelMouseProc(int nCode, WPARAM wParam, LPARAM lPara
     }
     catch (const std::exception& err) {
         // Lock from the same thread? It happens when several WM_MOUSEMOVE come while processing WM_LBUTTONUP
-        Instance->Log("wParam=0x%016llX flags=0x%08X dwExtraInfo=%016llX (%4d,%4d) time=%u -> %s\n"
+        Instance->Log("wParam=0x%016llX flags=0x%08X dwExtraInfo=%016llX (%4d,%4d) time=%u -> %s"
             , wParam, msllhs.flags, msllhs.dwExtraInfo, msllhs.pt.x, msllhs.pt.y, msllhs.time, err.what());
     }
 
@@ -133,7 +138,7 @@ static void CALLBACK TimerProc(void* /*lpParametar*/, BOOLEAN /*TimerOrWaitFired
     }
     catch (const std::exception& err) {
         // Lock from the same thread?
-        Instance->Log("%s\n", err.what());
+        Instance->Log("%s", err.what());
     }
 }
 
@@ -165,7 +170,7 @@ bool HookDllImpl::LowLevelMouseProc(WPARAM wParam, const MSLLHOOKSTRUCT& msllhs)
 
     if (wParam == WM_LBUTTONUP || wParam == WM_LBUTTONDOWN)
     {
-        Log("wParam=0x%016llX flags=0x%08X dwExtraInfo=%016llX (%4d,%4d) time=%u\n"
+        Log("wParam=0x%016llX flags=0x%08X dwExtraInfo=%016llX (%4d,%4d) time=%u"
             , wParam, msllhs.flags, msllhs.dwExtraInfo, msllhs.pt.x, msllhs.pt.y, msllhs.time);
     }
 
@@ -175,7 +180,7 @@ bool HookDllImpl::LowLevelMouseProc(WPARAM wParam, const MSLLHOOKSTRUCT& msllhs)
         {
             SavedEvent = msllhs;
             ::CreateTimerQueueTimer(&Timer, NULL, ::TimerProc, this, TOO_FAST_CLICK, 0, WT_EXECUTEINTIMERTHREAD);
-            Log("Timer started\n");
+            Log("Timer started");
         }
         else
             SavedEvent.time = msllhs.time;
@@ -186,13 +191,13 @@ bool HookDllImpl::LowLevelMouseProc(WPARAM wParam, const MSLLHOOKSTRUCT& msllhs)
     if (wParam == WM_LBUTTONUP && LButtonDownCounter == 0)
     {
         // Sticky drag mode?
-        Log("Excess button up\n");
+        Log("Excess button up");
         return true;
     }
 
     if (wParam == WM_LBUTTONUP && LButtonDownCounter > 1)
     {
-        Log("Nested button up: %u\n", LButtonDownCounter);
+        Log("Nested button up: %u", LButtonDownCounter);
         LButtonDownCounter--;
         return true;
     }
@@ -207,12 +212,12 @@ bool HookDllImpl::LowLevelMouseProc(WPARAM wParam, const MSLLHOOKSTRUCT& msllhs)
                 SavedEvent.time = 0;
                 LButtonDownCounter = 0;
                 LButtonDown = false;
-                Log("Skip too fast click\n");
+                Log("Skip too fast click");
                 return true;
             }
             else
             {
-                Log("Skip too fast move\n");
+                Log("Skip too fast move");
                 return true;
             }
         }
@@ -229,19 +234,19 @@ bool HookDllImpl::LowLevelMouseProc(WPARAM wParam, const MSLLHOOKSTRUCT& msllhs)
                     mouse_event(MOUSEEVENTF_LEFTDOWN, 0, 0, 0, 0);
                     mouse_event(MOUSEEVENTF_LEFTUP, 0, 0, 0, 0);
                     LButtonDown = false;
-                    Log("Button up simulated\n");
+                    Log("Button up simulated");
                     return true;
                 }
                 else
                 {
                     LButtonDown = false;
-                    Log("Button up pass through\n");
+                    Log("Button up pass through");
                     return false;
                 }
             case WM_MOUSEMOVE:
                 if (LButtonDownCounter > 0 && TooClose(msllhs.pt, SavedEvent.pt))
                 {
-                    Log("Skip too short move\n");
+                    Log("Skip too short move");
                     return true;
                 }
 
@@ -250,7 +255,7 @@ bool HookDllImpl::LowLevelMouseProc(WPARAM wParam, const MSLLHOOKSTRUCT& msllhs)
 
                 if (LButtonDown)
                 {
-                    Log("wParam=0x%016llX flags=0x%08X dwExtraInfo=%016llX (%4d,%4d) time=%u\n"
+                    Log("wParam=0x%016llX flags=0x%08X dwExtraInfo=%016llX (%4d,%4d) time=%u"
                         , wParam, msllhs.flags, msllhs.dwExtraInfo, msllhs.pt.x, msllhs.pt.y, msllhs.time);
                     return false;
                 }
@@ -271,7 +276,7 @@ bool HookDllImpl::LowLevelMouseProc(WPARAM wParam, const MSLLHOOKSTRUCT& msllhs)
 
     if (wParam == WM_LBUTTONUP)
     {
-        Log("Button up processed\n");
+        Log("Button up processed");
         return true;
     }
 
@@ -285,7 +290,7 @@ void HookDllImpl::TimerProc()
 
     mouse_event(MOUSEEVENTF_LEFTDOWN, 0, 0, 0, 0);
     LButtonDown = true;
-    Log("Button down by timer\n");
+    Log("Button down by timer");
 }
 
 HookDll::HookDll()
