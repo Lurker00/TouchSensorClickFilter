@@ -28,7 +28,7 @@ It is distributed as an executable file. No installation is required. If you nee
 
 ## Credits
 
-I've derived [SysTrayDemo](https://www.codeproject.com/Articles/18783/Example-of-a-SysTray-App-in-Win32) example which is distributed under [CPOL](https://www.codeproject.com/info/cpol10.aspx) license. I have taken the icon from [clickfix](https://github.com/CemraJC/clickfix) project.
+I've derived [SysTrayDemo](https://www.codeproject.com/Articles/18783/Example-of-a-SysTray-App-in-Win32) example which is distributed under [CPOL](https://www.codeproject.com/info/cpol10.aspx) license. I have taken the icon from [clickfix](https://github.com/CemraJC/clickfix) project which is distributed under [GPLv3](http://www.gnu.org/licenses/) license. I believe I didn't violate either of them.
 
 ## Copyright (c) 2019
 
