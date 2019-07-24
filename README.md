@@ -22,7 +22,7 @@ It can be temporarily disabled or closed from pop-up menu. It is 64-bit applicat
 
 ## How to use
 
-It is distributed as an executable file. No installation is required. If you need to launch automatically, use Windows means for this purpose.
+It is distributed as an executable file. No installation is required. If you need to launch it automatically, use Windows means for this purpose.
 
 **Note:** It works only for the current user under which is was launched. It will not work for apps started under Administrator, it it wasn't launched as Administrator. To autostart as Administrator, create a Scheduled Task with "Run with highest privileges" and with "At log on" trigger. A good example is [here](https://www.tenforums.com/tutorials/57690-create-elevated-shortcut-without-uac-prompt-windows-10-a.html).
 
