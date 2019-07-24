@@ -154,8 +154,8 @@ T abs(const T& v) { return v < 0 ? -v : v; }
 
 static bool TooClose(const POINT& p1, const POINT& p2)
 {
-    const int MIN_DISTANCE = 5;
-    return abs(p1.x - p2.x) < MIN_DISTANCE || abs(p1.y - p2.y) < MIN_DISTANCE;
+    const int MIN_DISTANCE = 2;
+    return abs(p1.x - p2.x) < MIN_DISTANCE && abs(p1.y - p2.y) < MIN_DISTANCE;
 }
 
 bool HookDllImpl::LowLevelMouseProc(WPARAM wParam, const MSLLHOOKSTRUCT& msllhs)
