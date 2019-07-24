@@ -3,6 +3,7 @@
 
 #include "stdafx.h"
 #include "SysTrayDemo.h"
+#include "HookDll.h"
 
 #define MAX_LOADSTRING 100
 #define	WM_USER_SHELLICON WM_USER + 1
@@ -14,7 +15,6 @@ HMENU hPopMenu;
 TCHAR szTitle[MAX_LOADSTRING];					// The title bar text
 TCHAR szWindowClass[MAX_LOADSTRING];			// the main window class name
 TCHAR szApplicationToolTip[MAX_LOADSTRING];	    // the main window class name
-BOOL bDisable = FALSE;							// keep application state
 
 // Forward declarations of functions included in this code module:
 ATOM				MyRegisterClass(HINSTANCE hInstance);
@@ -48,6 +48,7 @@ int APIENTRY _tWinMain(HINSTANCE hInstance,
 
 	hAccelTable = LoadAccelerators(hInstance, MAKEINTRESOURCE(IDC_SYSTRAYDEMO));
 
+	HookDll hook;
 	// Main message loop:
 	while (GetMessage(&msg, NULL, 0, 0))
 	{
@@ -60,8 +61,6 @@ int APIENTRY _tWinMain(HINSTANCE hInstance,
 
 	return (int) msg.wParam;
 }
-
-
 
 //
 //  FUNCTION: MyRegisterClass()
@@ -162,19 +161,20 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 		// systray msg callback 
 		switch(LOWORD(lParam)) 
 		{   
-			case WM_RBUTTONDOWN: 
+		case WM_LBUTTONDOWN:
+		case WM_RBUTTONDOWN:
 				UINT uFlag = MF_BYPOSITION|MF_STRING;
 				GetCursorPos(&lpClickPoint);
 				hPopMenu = CreatePopupMenu();
 				InsertMenu(hPopMenu,0xFFFFFFFF,MF_BYPOSITION|MF_STRING,IDM_ABOUT,_T("About"));
-				if ( bDisable == TRUE )
+				if (HookDll::Disabled())
 				{
 					uFlag |= MF_GRAYED;
 				}
-				InsertMenu(hPopMenu,0xFFFFFFFF,uFlag,IDM_TEST2,_T("Test 2")); // Test 2
-				InsertMenu(hPopMenu,0xFFFFFFFF,uFlag,IDM_TEST1,_T("Test 1")); // Test 1				
+//				InsertMenu(hPopMenu,0xFFFFFFFF,uFlag,IDM_TEST2,_T("Test 2")); // Test 2
+//				InsertMenu(hPopMenu,0xFFFFFFFF,uFlag,IDM_TEST1,_T("Test 1")); // Test 1				
 				InsertMenu(hPopMenu,0xFFFFFFFF,MF_SEPARATOR,IDM_SEP,_T("SEP"));				
-				if ( bDisable == TRUE )
+				if (HookDll::Disabled())
 				{
 					InsertMenu(hPopMenu,0xFFFFFFFF,MF_BYPOSITION|MF_STRING,IDM_ENABLE,_T("Enable"));									
 				}
@@ -207,10 +207,10 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 				MessageBox(NULL,_T("This is a test for menu Test 2"),_T("Test 2"),MB_OK);
 				break;
 			case IDM_DISABLE:
-				bDisable = TRUE;
+				HookDll::Enable(false);
 				break;
 			case IDM_ENABLE:
-				bDisable = FALSE;
+				HookDll::Enable(true);
 				break;
 			case IDM_EXIT:
 				Shell_NotifyIcon(NIM_DELETE,&nidApp);
