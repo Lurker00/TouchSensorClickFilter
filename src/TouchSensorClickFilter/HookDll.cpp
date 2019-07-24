@@ -9,34 +9,39 @@
 
 class LoggerImpl {
 public:
-	LoggerImpl()
-	{
+    LoggerImpl()
+    {
 #if _DEBUG
-		fLog = fopen("d:\\mousehook.log", "wt");
+        TCHAR szPath[MAX_PATH + 4];
+        if (GetModuleFileName(NULL, szPath, MAX_PATH) > 0)
+        {
+            _tcscat(szPath, _T(".log"));
+            fLog = _tfopen(szPath, _T("wt"));
+        }
 #endif
-	}
+    }
 
-	~LoggerImpl()
-	{
+    ~LoggerImpl()
+    {
 #if _DEBUG
-		if (fLog) fclose(fLog);
+        if (fLog) fclose(fLog);
 #endif
-	}
+    }
 
-	template<typename ...Args>
-	void Log(Args ... args)
-	{
+    template<typename ...Args>
+    void Log(Args ... args)
+    {
 #if _DEBUG
-		if (!fLog) return;
-		fprintf(fLog, "[%10u] ", ::GetTickCount());
-		fprintf(fLog, args...);
-		fflush(fLog);
+        if (!fLog) return;
+        fprintf(fLog, "[%10u] ", ::GetTickCount());
+        fprintf(fLog, args...);
+        fflush(fLog);
 #endif
-	}
+    }
 
 private:
 #if _DEBUG
-	FILE* fLog = NULL;
+    FILE* fLog = NULL;
 #endif
 };
 
