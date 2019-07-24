@@ -75,6 +75,13 @@ private:
         }
     }
 
+    void SimulateLeftDown()
+    {
+        StopTimer();
+        mouse_event(MOUSEEVENTF_LEFTDOWN, 0, 0, 0, 0);
+        LButtonDown = true;
+    }
+
     HHOOK  Hook    = 0;
     HANDLE Timer   = 0;
     bool   Disable = false;
@@ -164,7 +171,6 @@ static bool TooClose(const POINT& p1, const POINT& p2)
 bool HookDllImpl::LowLevelMouseProc(WPARAM wParam, const MSLLHOOKSTRUCT& msllhs)
 {
     std::lock_guard<std::mutex> lock(Mutex);
-    StopTimer();
 
     if (wParam == WM_LBUTTONUP || wParam == WM_LBUTTONDOWN)
     {
@@ -207,6 +213,7 @@ bool HookDllImpl::LowLevelMouseProc(WPARAM wParam, const MSLLHOOKSTRUCT& msllhs)
         {
             if (wParam == WM_LBUTTONUP)
             {
+                StopTimer();
                 SavedEvent.time = 0;
                 LButtonDownCounter = 0;
                 LButtonDown = false;
@@ -229,7 +236,7 @@ bool HookDllImpl::LowLevelMouseProc(WPARAM wParam, const MSLLHOOKSTRUCT& msllhs)
 
                 if (!LButtonDown)
                 {
-                    mouse_event(MOUSEEVENTF_LEFTDOWN, 0, 0, 0, 0);
+                    SimulateLeftDown();
                     mouse_event(MOUSEEVENTF_LEFTUP, 0, 0, 0, 0);
                     LButtonDown = false;
                     Log.Log("Button up simulated");
@@ -260,9 +267,8 @@ bool HookDllImpl::LowLevelMouseProc(WPARAM wParam, const MSLLHOOKSTRUCT& msllhs)
                 else
                 {
                     // After Timer implementation, this code should be unreachable:
-                    mouse_event(MOUSEEVENTF_LEFTDOWN, 0, 0, 0, 0);
+                    SimulateLeftDown();
                     mouse_event(MOUSEEVENTF_MOVE, msllhs.pt.x - SavedEvent.pt.x, msllhs.pt.y - SavedEvent.pt.y, 0, 0);
-                    LButtonDown = true;
                     return true;
                 }
             }
@@ -286,9 +292,8 @@ void HookDllImpl::TimerProc()
     std::lock_guard<std::mutex> lock(Mutex);
     if (!Timer) return; // Too late!
 
-    mouse_event(MOUSEEVENTF_LEFTDOWN, 0, 0, 0, 0);
-    LButtonDown = true;
     Log.Log("Button down by timer");
+    SimulateLeftDown();
 }
 
 HookDll::HookDll()
