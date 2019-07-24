@@ -2,7 +2,8 @@
 //
 
 #include "stdafx.h"
-#include "SysTrayDemo.h"
+#include "resource.h"
+
 #include "HookDll.h"
 
 #define MAX_LOADSTRING 100
@@ -14,7 +15,7 @@ NOTIFYICONDATA nidApp;
 HMENU hPopMenu;
 TCHAR szTitle[MAX_LOADSTRING];	             // The title bar text
 TCHAR szWindowClass[MAX_LOADSTRING];         // the main window class name
-TCHAR szApplicationToolTip[MAX_LOADSTRING];  // the main window class name
+TCHAR szApplicationToolTip[MAX_LOADSTRING];  // the systray icon tooltip
 
 // Forward declarations of functions included in this code module:
 ATOM				MyRegisterClass(HINSTANCE hInstance);
@@ -30,30 +31,26 @@ int APIENTRY _tWinMain(HINSTANCE hInstance,
     UNREFERENCED_PARAMETER(hPrevInstance);
     UNREFERENCED_PARAMETER(lpCmdLine);
 
-    // TODO: Place code here.
-    MSG msg;
-    HACCEL hAccelTable;
-
     // Initialize global strings
     LoadString(hInstance, IDS_APP_TITLE, szTitle, MAX_LOADSTRING);
     LoadString(hInstance, IDC_APP_CLASS, szWindowClass, MAX_LOADSTRING);
 
     // Only one instance is allowed:
-    if (FindWindowW(szWindowClass, szTitle) != NULL)
+    if (FindWindow(szWindowClass, szTitle) != NULL)
         return 0;
 
     MyRegisterClass(hInstance);
 
     // Perform application initialization:
     if (!InitInstance(hInstance, nCmdShow))
-    {
-        return FALSE;
-    }
+        return 0;
 
-    hAccelTable = LoadAccelerators(hInstance, MAKEINTRESOURCE(IDC_APP_CLASS));
+    HACCEL hAccelTable = LoadAccelerators(hInstance, MAKEINTRESOURCE(IDC_APP_CLASS));
 
-    HookDll hook;
+    HookDll hook; // Install mouse hook
+
     // Main message loop:
+    MSG msg;
     while (GetMessage(&msg, NULL, 0, 0))
     {
         if (!TranslateAccelerator(msg.hwnd, hAccelTable, &msg))
@@ -90,12 +87,12 @@ ATOM MyRegisterClass(HINSTANCE hInstance)
 	wcex.cbClsExtra		= 0;
 	wcex.cbWndExtra		= 0;
 	wcex.hInstance		= hInstance;
-	wcex.hIcon			= LoadIcon(hInstance, MAKEINTRESOURCE(IDI_SYSTRAYDEMO));
+	wcex.hIcon			= LoadIcon(hInstance, MAKEINTRESOURCE(IDI_APP_ICON));
 	wcex.hCursor		= LoadCursor(NULL, IDC_ARROW);
 	wcex.hbrBackground	= (HBRUSH)(COLOR_WINDOW+1);
 	wcex.lpszMenuName	= MAKEINTRESOURCE(IDC_APP_CLASS);
 	wcex.lpszClassName	= szWindowClass;
-	wcex.hIconSm		= LoadIcon(wcex.hInstance, MAKEINTRESOURCE(IDI_SMALL));
+	wcex.hIconSm		= LoadIcon(hInstance, MAKEINTRESOURCE(IDI_APP_ICON));
 
 	return RegisterClassEx(&wcex);
 }
@@ -110,39 +107,29 @@ ATOM MyRegisterClass(HINSTANCE hInstance)
 //        In this function, we save the instance handle in a global variable and
 //        create and display the main program window.
 //
-BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
+BOOL InitInstance(HINSTANCE hInstance, int /*nCmdShow*/)
 {
-   HWND hWnd;
-   HICON hMainIcon;
+    hInst = hInstance; // Store instance handle in our global variable
 
-   hInst = hInstance; // Store instance handle in our global variable
+    HWND hWnd = CreateWindow(szWindowClass, szTitle, WS_OVERLAPPEDWINDOW,
+        CW_USEDEFAULT, 0, CW_USEDEFAULT, 0, NULL, NULL, hInstance, NULL);
 
-   hWnd = CreateWindow(szWindowClass, szTitle, WS_OVERLAPPEDWINDOW,
-      CW_USEDEFAULT, 0, CW_USEDEFAULT, 0, NULL, NULL, hInstance, NULL);
+    if (!hWnd) return FALSE;
 
-   if (!hWnd)
-   {
-      return FALSE;
-   }
+    HICON hMainIcon = LoadIcon(hInstance, (LPCTSTR)MAKEINTRESOURCE(IDI_APP_ICON));
 
-   hMainIcon = LoadIcon(hInstance,(LPCTSTR)MAKEINTRESOURCE(IDI_SYSTRAYDEMO)); 
+    nidApp.cbSize = sizeof(NOTIFYICONDATA);           // sizeof the struct in bytes 
+    nidApp.hWnd = (HWND)hWnd;                         // handle of the window which will process this app. messages 
+    nidApp.uID = IDI_APP_ICON;                        // ID of the icon that will appear in the system tray 
+    nidApp.uFlags = NIF_ICON | NIF_MESSAGE | NIF_TIP; // ORing of all the flags 
+    nidApp.hIcon = hMainIcon;                         // handle of the Icon to be displayed, obtained from LoadIcon 
+    nidApp.uCallbackMessage = WM_USER_SHELLICON;
+    LoadString(hInstance, IDS_APPTOOLTIP, nidApp.szTip, MAX_LOADSTRING);
+    Shell_NotifyIcon(NIM_ADD, &nidApp);
 
-   nidApp.cbSize = sizeof(NOTIFYICONDATA); // sizeof the struct in bytes 
-   nidApp.hWnd = (HWND) hWnd;              //handle of the window which will process this app. messages 
-   nidApp.uID = IDI_SYSTRAYDEMO;           //ID of the icon that willl appear in the system tray 
-   nidApp.uFlags = NIF_ICON | NIF_MESSAGE | NIF_TIP; //ORing of all the flags 
-   nidApp.hIcon = hMainIcon; // handle of the Icon to be displayed, obtained from LoadIcon 
-   nidApp.uCallbackMessage = WM_USER_SHELLICON; 
-   LoadString(hInstance, IDS_APPTOOLTIP,nidApp.szTip,MAX_LOADSTRING);
-   Shell_NotifyIcon(NIM_ADD, &nidApp); 
-
-   return TRUE;
+    return TRUE;
 }
 
-void Init()
-{
-	// user defined message that will be sent as the notification message to the Window Procedure 
-}
 //
 //  FUNCTION: WndProc(HWND, UINT, WPARAM, LPARAM)
 //
@@ -167,25 +154,14 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 		{
 		case WM_LBUTTONDOWN:
 		case WM_RBUTTONDOWN:
-				UINT uFlag = MF_BYPOSITION|MF_STRING;
 				GetCursorPos(&lpClickPoint);
 				hPopMenu = CreatePopupMenu();
 				InsertMenu(hPopMenu,0xFFFFFFFF,MF_BYPOSITION|MF_STRING,IDM_ABOUT,_T("About"));
-				if (HookDll::Disabled())
-				{
-					uFlag |= MF_GRAYED;
-				}
-//				InsertMenu(hPopMenu,0xFFFFFFFF,uFlag,IDM_TEST2,_T("Test 2")); // Test 2
-//				InsertMenu(hPopMenu,0xFFFFFFFF,uFlag,IDM_TEST1,_T("Test 1")); // Test 1
 				InsertMenu(hPopMenu,0xFFFFFFFF,MF_SEPARATOR,IDM_SEP,_T("SEP"));
 				if (HookDll::Disabled())
-				{
 					InsertMenu(hPopMenu,0xFFFFFFFF,MF_BYPOSITION|MF_STRING,IDM_ENABLE,_T("Enable"));
-				}
 				else
-				{
 					InsertMenu(hPopMenu,0xFFFFFFFF,MF_BYPOSITION|MF_STRING,IDM_DISABLE,_T("Disable"));
-				}
 				InsertMenu(hPopMenu,0xFFFFFFFF,MF_SEPARATOR,IDM_SEP,_T("SEP"));
 				InsertMenu(hPopMenu,0xFFFFFFFF,MF_BYPOSITION|MF_STRING,IDM_EXIT,_T("Exit"));
 
@@ -203,12 +179,6 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 		{
 			case IDM_ABOUT:
 				DialogBox(hInst, MAKEINTRESOURCE(IDD_ABOUTBOX), hWnd, About);
-				break;
-			case IDM_TEST1:
-				MessageBox(NULL,_T("This is a test for menu Test 1"),_T("Test 1"),MB_OK);
-				break;
-			case IDM_TEST2:
-				MessageBox(NULL,_T("This is a test for menu Test 2"),_T("Test 2"),MB_OK);
 				break;
 			case IDM_DISABLE:
 				HookDll::Enable(false);

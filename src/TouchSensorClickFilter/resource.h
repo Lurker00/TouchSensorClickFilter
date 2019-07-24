@@ -9,8 +9,7 @@
 #define IDM_ABOUT                       104
 #define IDS_APPTOOLTIP                  104
 #define IDM_EXIT                        105
-#define IDI_SYSTRAYDEMO                 107
-#define IDI_SMALL                       108
+#define IDI_APP_ICON                    107
 #define IDC_APP_CLASS                   109
 #define IDR_MAINFRAME                   128
 #define ID_S_                           32771
@@ -22,10 +21,8 @@
 #define ID_SYSTRAYMENU_TEST2            32777
 #define IDM_DISABLE                     32778
 #define IDM_ENABLE                      32779
-#define IDM_TEST2                       32780
-#define IDM_TEST1                       32781
-#define ID_SYSTRAYMENU_SEP              32782
-#define IDM_SEP                         32783
+#define ID_SYSTRAYMENU_SEP              32780
+#define IDM_SEP                         32781
 #define IDC_STATIC                      -1
 
 // Next default values for new objects
@@ -34,7 +31,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NO_MFC                     1
 #define _APS_NEXT_RESOURCE_VALUE        129
-#define _APS_NEXT_COMMAND_VALUE         32784
+#define _APS_NEXT_COMMAND_VALUE         32782
 #define _APS_NEXT_CONTROL_VALUE         1000
 #define _APS_NEXT_SYMED_VALUE           110
 #endif

@@ -158,7 +158,6 @@
     <ClInclude Include="HookDll.h" />
     <ClInclude Include="Resource.h" />
     <ClInclude Include="stdafx.h" />
-    <ClInclude Include="SysTrayDemo.h" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="small.ico" />
