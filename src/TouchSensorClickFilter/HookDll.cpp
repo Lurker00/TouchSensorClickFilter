@@ -211,77 +211,73 @@ bool HookDllImpl::LowLevelMouseProc(WPARAM wParam, const MSLLHOOKSTRUCT& msllhs)
         return true;
     }
 
-    if ((wParam == WM_LBUTTONUP || wParam == WM_MOUSEMOVE) && SavedEvent.time != 0)
-    {
-        // Disable too fast clicks!
-        if (SavedEvent.time <= msllhs.time && msllhs.time - SavedEvent.time < TOO_FAST_CLICK)
+    if (SavedEvent.time != 0)
+    { // WM_LBUTTONUP was detected
+        const bool tooFast = SavedEvent.time <= msllhs.time && msllhs.time - SavedEvent.time < TOO_FAST_CLICK;
+
+        if (wParam == WM_LBUTTONUP)
         {
-            if (wParam == WM_LBUTTONUP)
+            if (tooFast)
             {
                 StopTimer();
-                SavedEvent.time    = 0;
                 LButtonDownCounter = 0;
-                LButtonDown        = false;
+                SavedEvent.time    = 0;
+                LButtonDown = false;
                 Log.Log("Skip too fast click");
                 return true;
             }
+
+            LButtonDownCounter = 0;
+            SavedEvent.time    = 0;
+
+            if (LButtonDown)
+            {
+                LButtonDown = false;
+                Log.Log("Button up pass through");
+                return false;
+            }
             else
+            {
+                // After Timer implementation, this code should be unreachable:
+                SimulateLeftDown();
+                mouse_event(MOUSEEVENTF_LEFTUP, 0, 0, 0, 0);
+                LButtonDown = false;
+                Log.Log("Button up simulated");
+                return true;
+            }
+        }
+
+        if (wParam == WM_MOUSEMOVE)
+        {
+            if (tooFast)
             {
                 Log.Log("Skip too fast move");
                 return true;
             }
-        }
-        else
-        {
-            switch (wParam)
+
+            if (LButtonDownCounter > 0 && TooClose(msllhs.pt, SavedEvent.pt))
             {
-            case WM_LBUTTONUP:
-                LButtonDownCounter = 0;
-                SavedEvent.time    = 0;
+                Log.Log("Skip too short move");
+                return true;
+            }
 
-                if (LButtonDown)
-                {
-                    LButtonDown = false;
-                    Log.Log("Button up pass through");
-                    return false;
-                }
-                else
-                {
-                    // After Timer implementation, this code should be unreachable:
-                    SimulateLeftDown();
-                    mouse_event(MOUSEEVENTF_LEFTUP, 0, 0, 0, 0);
-                    LButtonDown = false;
-                    Log.Log("Button up simulated");
-                    return true;
-                }
-            case WM_MOUSEMOVE:
-                if (LButtonDownCounter > 0 && TooClose(msllhs.pt, SavedEvent.pt))
-                {
-                    Log.Log("Skip too short move");
-                    return true;
-                }
+            // Sticky button: drag mode
+            LButtonDownCounter = 0;
 
-                // Sticky button: drag mode
-                LButtonDownCounter = 0;
-
-                if (LButtonDown)
-                {
-                    Log.Log("wParam=0x%016llX flags=0x%08X dwExtraInfo=%016llX (%4d,%4d) time=%u"
-                        , wParam, msllhs.flags, msllhs.dwExtraInfo, msllhs.pt.x, msllhs.pt.y, msllhs.time);
-                    return false;
-                }
-                else
-                {
-                    // After Timer implementation, this code should be unreachable:
-                    SimulateLeftDown();
-                    mouse_event(MOUSEEVENTF_MOVE, msllhs.pt.x - SavedEvent.pt.x, msllhs.pt.y - SavedEvent.pt.y, 0, 0);
-                    return true;
-                }
+            if (LButtonDown)
+            {
+                Log.Log("wParam=0x%016llX flags=0x%08X dwExtraInfo=%016llX (%4d,%4d) time=%u"
+                    , wParam, msllhs.flags, msllhs.dwExtraInfo, msllhs.pt.x, msllhs.pt.y, msllhs.time);
+                return false;
+            }
+            else
+            {
+                // After Timer implementation, this code should be unreachable:
+                SimulateLeftDown();
+                mouse_event(MOUSEEVENTF_MOVE, msllhs.pt.x - SavedEvent.pt.x, msllhs.pt.y - SavedEvent.pt.y, 0, 0);
+                return true;
             }
         }
-
-        // This line is unreachable, actually!
-        return true;
     }
 
     if (wParam == WM_LBUTTONUP)
@@ -291,6 +287,7 @@ bool HookDllImpl::LowLevelMouseProc(WPARAM wParam, const MSLLHOOKSTRUCT& msllhs)
         return true;
     }
 
+    // This code should be unreachable
     return false;
 }
 
