@@ -46,21 +46,34 @@ private:
 };
 
 class HookDllImpl {
+    static const unsigned TOO_FAST_CLICK = 50; // ms
 public:
     HookDllImpl();
     ~HookDllImpl();
 
     bool LowLevelMouseProc(WPARAM wParam, const MSLLHOOKSTRUCT& msllhs);
+    void TimerProc();
     bool Disabled() const { return Disable; }
     void Enable(bool enable) { Disable = !enable; }
     HHOOK hHook() const { return Hook; }
 
-private:
     template<typename ...Args>
     void Log(Args ... args) { Logger.Log(args...); }
 
-    HHOOK Hook = 0;
-    bool  Disable = false;
+private:
+    void StopTimer()
+    {
+        if (Timer)
+        {
+            ::DeleteTimerQueueTimer(NULL, Timer, NULL);
+//            ::CloseHandle(Timer);
+            Timer = NULL;
+        }
+    }
+
+    HHOOK  Hook    = 0;
+    HANDLE Timer   = 0;
+    bool   Disable = false;
     MSLLHOOKSTRUCT SavedEvent = { 0, };
     unsigned LButtonDownCounter = 0;
     bool LButtonDown = false;
@@ -97,10 +110,31 @@ static LRESULT CALLBACK LowLevelMouseProc(int nCode, WPARAM wParam, LPARAM lPara
     if (msllhs.flags != 0) // Injected event, don't process
         return ::CallNextHookEx(hHook, nCode, wParam, lParam);
 
-    if (Instance->LowLevelMouseProc(wParam, msllhs))
-        return 1; // Stop further processing
+    try {
+        if (Instance->LowLevelMouseProc(wParam, msllhs))
+            return 1; // Stop further processing
+    }
+    catch (const std::exception& err) {
+        // Lock from the same thread? It happens when several WM_MOUSEMOVE come while processing WM_LBUTTONUP
+        Instance->Log("wParam=0x%016llX flags=0x%08X dwExtraInfo=%016llX (%4d,%4d) time=%u -> %s\n"
+            , wParam, msllhs.flags, msllhs.dwExtraInfo, msllhs.pt.x, msllhs.pt.y, msllhs.time, err.what());
+    }
 
     return ::CallNextHookEx(hHook, nCode, wParam, lParam);
+}
+
+static void CALLBACK TimerProc(void* /*lpParametar*/, BOOLEAN /*TimerOrWaitFired*/)
+{
+    if (Instance == nullptr)
+        return; // Should never happen!
+
+    try {
+        Instance->TimerProc();
+    }
+    catch (const std::exception& err) {
+        // Lock from the same thread?
+        Instance->Log("%s\n", err.what());
+    }
 }
 
 HookDllImpl::HookDllImpl() {
@@ -112,16 +146,22 @@ HookDllImpl::HookDllImpl() {
 HookDllImpl::~HookDllImpl() {
     if (Hook)
         ::UnhookWindowsHookEx(Hook);
+    StopTimer();
+}
+
+template <typename T> inline
+T abs(const T& v) { return v < 0 ? -v : v; }
+
+static bool TooClose(const POINT& p1, const POINT& p2)
+{
+    const int MIN_DISTANCE = 5;
+    return abs(p1.x - p2.x) < MIN_DISTANCE || abs(p1.y - p2.y) < MIN_DISTANCE;
 }
 
 bool HookDllImpl::LowLevelMouseProc(WPARAM wParam, const MSLLHOOKSTRUCT& msllhs)
 {
-    std::unique_lock<std::mutex> lock(Mutex, std::try_to_lock);
-    if (!lock.owns_lock())
-    {
-        Log("Can't lock\n");
-        return false;
-    }
+    std::lock_guard<std::mutex> lock(Mutex);
+    StopTimer();
 
     if (wParam == WM_LBUTTONUP || wParam == WM_LBUTTONDOWN)
     {
@@ -131,8 +171,13 @@ bool HookDllImpl::LowLevelMouseProc(WPARAM wParam, const MSLLHOOKSTRUCT& msllhs)
 
     if (wParam == WM_LBUTTONDOWN)
     {
-        if (LButtonDownCounter == 0) SavedEvent = msllhs;
-        else                         SavedEvent.time = msllhs.time;
+        if (LButtonDownCounter == 0)
+        {
+            SavedEvent = msllhs;
+            ::CreateTimerQueueTimer(&Timer, NULL, ::TimerProc, this, TOO_FAST_CLICK, 0, WT_EXECUTEINTIMERTHREAD);
+        }
+        else
+            SavedEvent.time = msllhs.time;
         LButtonDownCounter++;
         return true;
     }
@@ -146,7 +191,7 @@ bool HookDllImpl::LowLevelMouseProc(WPARAM wParam, const MSLLHOOKSTRUCT& msllhs)
 
     if (wParam == WM_LBUTTONUP && LButtonDownCounter > 1)
     {
-        Log("Nested button up\n");
+        Log("Nested button up: %u\n", LButtonDownCounter);
         LButtonDownCounter--;
         return true;
     }
@@ -154,18 +199,18 @@ bool HookDllImpl::LowLevelMouseProc(WPARAM wParam, const MSLLHOOKSTRUCT& msllhs)
     if ((wParam == WM_LBUTTONUP || wParam == WM_MOUSEMOVE) && SavedEvent.time != 0)
     {
         // Disable too fast clicks!
-        if (SavedEvent.time <= msllhs.time && msllhs.time - SavedEvent.time < 50)
+        if (SavedEvent.time <= msllhs.time && msllhs.time - SavedEvent.time < TOO_FAST_CLICK)
         {
             if (wParam == WM_LBUTTONUP)
             {
                 SavedEvent.time = 0;
                 LButtonDownCounter = 0;
                 LButtonDown = false;
-                Log("Skip too short click\n");
+                Log("Skip too fast click\n");
             }
             else
             {
-                Log("Skip too short move\n");
+                Log("Skip too fast move\n");
             }
         }
         else
@@ -173,16 +218,31 @@ bool HookDllImpl::LowLevelMouseProc(WPARAM wParam, const MSLLHOOKSTRUCT& msllhs)
             switch (wParam)
             {
             case WM_LBUTTONUP:
-                if (!LButtonDown)
-                    mouse_event(MOUSEEVENTF_LEFTDOWN, 0, 0, 0, 0);
-                mouse_event(MOUSEEVENTF_LEFTUP, 0, 0, 0, 0);
-                Log("Button up simulated\n");
                 LButtonDownCounter = 0;
-                SavedEvent.time = 0;
-                LButtonDown = false;
-                break;
+                SavedEvent.time    = 0;
+
+                if (!LButtonDown)
+                {
+                    mouse_event(MOUSEEVENTF_LEFTDOWN, 0, 0, 0, 0);
+                    mouse_event(MOUSEEVENTF_LEFTUP, 0, 0, 0, 0);
+                    LButtonDown = false;
+                    Log("Button up simulated\n");
+                    return true;
+                }
+                else
+                {
+                    LButtonDown = false;
+                    Log("Button up pass through\n");
+                    return false;
+                }
             case WM_MOUSEMOVE:
                 if (LButtonDown) return false;
+
+                if (TooClose(msllhs.pt, SavedEvent.pt))
+                {
+                    Log("Skip too short move\n");
+                    return true;
+                }
 
                 mouse_event(MOUSEEVENTF_LEFTDOWN, 0, 0, 0, 0);
                 mouse_event(MOUSEEVENTF_MOVE, msllhs.pt.x - SavedEvent.pt.x, msllhs.pt.y - SavedEvent.pt.y, 0, 0);
@@ -203,6 +263,16 @@ bool HookDllImpl::LowLevelMouseProc(WPARAM wParam, const MSLLHOOKSTRUCT& msllhs)
     }
 
     return false;
+}
+
+void HookDllImpl::TimerProc()
+{
+    std::lock_guard<std::mutex> lock(Mutex);
+    if (!Timer) return; // Too late!
+
+    mouse_event(MOUSEEVENTF_LEFTDOWN, 0, 0, 0, 0);
+    LButtonDown = true;
+    Log("Button down by timer\n");
 }
 
 HookDll::HookDll()
