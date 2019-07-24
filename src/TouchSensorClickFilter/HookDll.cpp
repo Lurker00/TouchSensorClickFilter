@@ -51,6 +51,10 @@ private:
 };
 
 class HookDllImpl {
+    /******************************************
+        In no a test I was able to click faster than in 50 ms.
+        In all the tests, false clicks by touch sensor were under 16 ms.
+    *******************************************/
     static const unsigned TOO_FAST_CLICK = 50; // ms
 public:
     HookDllImpl();
@@ -95,7 +99,7 @@ static HookDllImpl* Instance = nullptr;
 
 static bool MyEvent(WPARAM wParam)
 {
-    static WPARAM events[] = { WM_MOUSEMOVE, WM_LBUTTONDOWN, WM_LBUTTONUP/*, WM_RBUTTONDOWN, WM_RBUTTONUP*/ };
+    static WPARAM events[] = { WM_MOUSEMOVE, WM_LBUTTONDOWN, WM_LBUTTONUP };
     for (auto e : events)
         if (e == wParam) return true;
     return false;
@@ -188,6 +192,7 @@ bool HookDllImpl::LowLevelMouseProc(WPARAM wParam, const MSLLHOOKSTRUCT& msllhs)
         }
         else
             SavedEvent.time = msllhs.time;
+
         LButtonDownCounter++;
         return true;
     }
@@ -214,9 +219,9 @@ bool HookDllImpl::LowLevelMouseProc(WPARAM wParam, const MSLLHOOKSTRUCT& msllhs)
             if (wParam == WM_LBUTTONUP)
             {
                 StopTimer();
-                SavedEvent.time = 0;
+                SavedEvent.time    = 0;
                 LButtonDownCounter = 0;
-                LButtonDown = false;
+                LButtonDown        = false;
                 Log.Log("Skip too fast click");
                 return true;
             }
@@ -234,19 +239,20 @@ bool HookDllImpl::LowLevelMouseProc(WPARAM wParam, const MSLLHOOKSTRUCT& msllhs)
                 LButtonDownCounter = 0;
                 SavedEvent.time    = 0;
 
-                if (!LButtonDown)
+                if (LButtonDown)
                 {
+                    LButtonDown = false;
+                    Log.Log("Button up pass through");
+                    return false;
+                }
+                else
+                {
+                    // After Timer implementation, this code should be unreachable:
                     SimulateLeftDown();
                     mouse_event(MOUSEEVENTF_LEFTUP, 0, 0, 0, 0);
                     LButtonDown = false;
                     Log.Log("Button up simulated");
                     return true;
-                }
-                else
-                {
-                    LButtonDown = false;
-                    Log.Log("Button up pass through");
-                    return false;
                 }
             case WM_MOUSEMOVE:
                 if (LButtonDownCounter > 0 && TooClose(msllhs.pt, SavedEvent.pt))
@@ -280,6 +286,7 @@ bool HookDllImpl::LowLevelMouseProc(WPARAM wParam, const MSLLHOOKSTRUCT& msllhs)
 
     if (wParam == WM_LBUTTONUP)
     {
+        // This code should be unreachable
         Log.Log("Button up processed");
         return true;
     }
