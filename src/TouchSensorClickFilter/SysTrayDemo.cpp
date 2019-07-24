@@ -12,9 +12,9 @@
 HINSTANCE hInst;	// current instance
 NOTIFYICONDATA nidApp;
 HMENU hPopMenu;
-TCHAR szTitle[MAX_LOADSTRING];					// The title bar text
-TCHAR szWindowClass[MAX_LOADSTRING];			// the main window class name
-TCHAR szApplicationToolTip[MAX_LOADSTRING];	    // the main window class name
+TCHAR szTitle[MAX_LOADSTRING];	             // The title bar text
+TCHAR szWindowClass[MAX_LOADSTRING];         // the main window class name
+TCHAR szApplicationToolTip[MAX_LOADSTRING];  // the main window class name
 
 // Forward declarations of functions included in this code module:
 ATOM				MyRegisterClass(HINSTANCE hInstance);
@@ -30,14 +30,14 @@ int APIENTRY _tWinMain(HINSTANCE hInstance,
 	UNREFERENCED_PARAMETER(hPrevInstance);
 	UNREFERENCED_PARAMETER(lpCmdLine);
 
- 	// TODO: Place code here.
+	// TODO: Place code here.
 	MSG msg;
 	HACCEL hAccelTable;
 
 	// Initialize global strings
 	LoadString(hInstance, IDS_APP_TITLE, szTitle, MAX_LOADSTRING);
 	LoadString(hInstance, IDC_SYSTRAYDEMO, szWindowClass, MAX_LOADSTRING);
-	
+
 	MyRegisterClass(hInstance);
 
 	// Perform application initialization:
@@ -160,7 +160,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 	case WM_USER_SHELLICON: 
 		// systray msg callback 
 		switch(LOWORD(lParam)) 
-		{   
+		{
 		case WM_LBUTTONDOWN:
 		case WM_RBUTTONDOWN:
 				UINT uFlag = MF_BYPOSITION|MF_STRING;
@@ -172,19 +172,19 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 					uFlag |= MF_GRAYED;
 				}
 //				InsertMenu(hPopMenu,0xFFFFFFFF,uFlag,IDM_TEST2,_T("Test 2")); // Test 2
-//				InsertMenu(hPopMenu,0xFFFFFFFF,uFlag,IDM_TEST1,_T("Test 1")); // Test 1				
-				InsertMenu(hPopMenu,0xFFFFFFFF,MF_SEPARATOR,IDM_SEP,_T("SEP"));				
+//				InsertMenu(hPopMenu,0xFFFFFFFF,uFlag,IDM_TEST1,_T("Test 1")); // Test 1
+				InsertMenu(hPopMenu,0xFFFFFFFF,MF_SEPARATOR,IDM_SEP,_T("SEP"));
 				if (HookDll::Disabled())
 				{
-					InsertMenu(hPopMenu,0xFFFFFFFF,MF_BYPOSITION|MF_STRING,IDM_ENABLE,_T("Enable"));									
+					InsertMenu(hPopMenu,0xFFFFFFFF,MF_BYPOSITION|MF_STRING,IDM_ENABLE,_T("Enable"));
 				}
-				else 
+				else
 				{
-					InsertMenu(hPopMenu,0xFFFFFFFF,MF_BYPOSITION|MF_STRING,IDM_DISABLE,_T("Disable"));				
+					InsertMenu(hPopMenu,0xFFFFFFFF,MF_BYPOSITION|MF_STRING,IDM_DISABLE,_T("Disable"));
 				}
-				InsertMenu(hPopMenu,0xFFFFFFFF,MF_SEPARATOR,IDM_SEP,_T("SEP"));				
+				InsertMenu(hPopMenu,0xFFFFFFFF,MF_SEPARATOR,IDM_SEP,_T("SEP"));
 				InsertMenu(hPopMenu,0xFFFFFFFF,MF_BYPOSITION|MF_STRING,IDM_EXIT,_T("Exit"));
-									
+
 				SetForegroundWindow(hWnd);
 				TrackPopupMenu(hPopMenu,TPM_LEFTALIGN|TPM_LEFTBUTTON|TPM_BOTTOMALIGN,lpClickPoint.x, lpClickPoint.y,0,hWnd,NULL);
 				return TRUE; 
