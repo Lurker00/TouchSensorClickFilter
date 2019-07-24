@@ -15,10 +15,12 @@ The app I wrote does the following:
 * Filters out short (<50 ms) clicks.
 * Filters out short (<3 pixels) movements when left button is just pressed.
 * Sticky drag: you press and hold left button, start moving the cursor, release the button, and click it again when you finished dragging.
-* Passes through mouse events, generated from touch screen events and from other sources.
+* Passes through mouse events, generated from touch screen events and/or coming from other sources.
 * Disables the filter in RDP sessions.
 
-It can be temporarily disabled or closed from pop-up menu. It is 64-bit application tested under Windows 10 only.
+Sticky drag is the only solution I've found against "button up" events produced by the sensor.
+
+The filter can be temporarily disabled, or app can be closed from pop-up menu. It is 64-bit application tested under Windows 10 only.
 
 ## How to use
 
