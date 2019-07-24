@@ -66,8 +66,8 @@ private:
         if (Timer)
         {
             ::DeleteTimerQueueTimer(NULL, Timer, NULL);
-//            ::CloseHandle(Timer);
             Timer = NULL;
+            Log("Timer removed\n");
         }
     }
 
@@ -175,6 +175,7 @@ bool HookDllImpl::LowLevelMouseProc(WPARAM wParam, const MSLLHOOKSTRUCT& msllhs)
         {
             SavedEvent = msllhs;
             ::CreateTimerQueueTimer(&Timer, NULL, ::TimerProc, this, TOO_FAST_CLICK, 0, WT_EXECUTEINTIMERTHREAD);
+            Log("Timer started\n");
         }
         else
             SavedEvent.time = msllhs.time;
@@ -207,10 +208,12 @@ bool HookDllImpl::LowLevelMouseProc(WPARAM wParam, const MSLLHOOKSTRUCT& msllhs)
                 LButtonDownCounter = 0;
                 LButtonDown = false;
                 Log("Skip too fast click\n");
+                return true;
             }
             else
             {
                 Log("Skip too fast move\n");
+                return true;
             }
         }
         else
@@ -236,23 +239,33 @@ bool HookDllImpl::LowLevelMouseProc(WPARAM wParam, const MSLLHOOKSTRUCT& msllhs)
                     return false;
                 }
             case WM_MOUSEMOVE:
-                if (LButtonDown) return false;
-
-                if (TooClose(msllhs.pt, SavedEvent.pt))
+                if (LButtonDownCounter > 0 && TooClose(msllhs.pt, SavedEvent.pt))
                 {
                     Log("Skip too short move\n");
                     return true;
                 }
 
-                mouse_event(MOUSEEVENTF_LEFTDOWN, 0, 0, 0, 0);
-                mouse_event(MOUSEEVENTF_MOVE, msllhs.pt.x - SavedEvent.pt.x, msllhs.pt.y - SavedEvent.pt.y, 0, 0);
-                LButtonDown = true;
                 // Sticky button: drag mode
                 LButtonDownCounter = 0;
-                break;
+
+                if (LButtonDown)
+                {
+                    Log("wParam=0x%016llX flags=0x%08X dwExtraInfo=%016llX (%4d,%4d) time=%u\n"
+                        , wParam, msllhs.flags, msllhs.dwExtraInfo, msllhs.pt.x, msllhs.pt.y, msllhs.time);
+                    return false;
+                }
+                else
+                {
+                    // After Timer implementation, this code should be unreachable:
+                    mouse_event(MOUSEEVENTF_LEFTDOWN, 0, 0, 0, 0);
+                    mouse_event(MOUSEEVENTF_MOVE, msllhs.pt.x - SavedEvent.pt.x, msllhs.pt.y - SavedEvent.pt.y, 0, 0);
+                    LButtonDown = true;
+                    return true;
+                }
             }
         }
 
+        // This line is unreachable, actually!
         return true;
     }
 
