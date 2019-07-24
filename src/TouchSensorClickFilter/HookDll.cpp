@@ -204,7 +204,7 @@ bool HookDllImpl::LowLevelMouseProc(WPARAM wParam, const MSLLHOOKSTRUCT& msllhs)
 
     if (wParam == WM_LBUTTONDOWN)
     {
-        if (LButtonDownCounter == 0)
+        if (LButtonDownCounter == 0 && !LButtonDown)
         {
             SavedEvent = msllhs;
             ::CreateTimerQueueTimer(&Timer, NULL, ::TimerProc, this, TOO_FAST_CLICK, 0, WT_EXECUTEINTIMERTHREAD);
@@ -232,23 +232,20 @@ bool HookDllImpl::LowLevelMouseProc(WPARAM wParam, const MSLLHOOKSTRUCT& msllhs)
     }
 
     if (SavedEvent.time != 0)
-    { // WM_LBUTTONUP was detected
+    { // WM_LBUTTONDOWN was detected
         const bool tooFast = SavedEvent.time <= msllhs.time && msllhs.time - SavedEvent.time < TOO_FAST_CLICK;
 
         if (wParam == WM_LBUTTONUP)
         {
+            LButtonDownCounter = 0;
+            SavedEvent.time    = 0;
+
             if (tooFast)
             {
                 StopTimer();
-                LButtonDownCounter = 0;
-                SavedEvent.time    = 0;
-                LButtonDown = false;
                 Log.Log("Skip too fast click");
                 return true;
             }
-
-            LButtonDownCounter = 0;
-            SavedEvent.time    = 0;
 
             if (LButtonDown)
             {
