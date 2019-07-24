@@ -47,185 +47,185 @@ private:
 
 class HookDllImpl {
 public:
-	HookDllImpl();
-	~HookDllImpl();
+    HookDllImpl();
+    ~HookDllImpl();
 
-	bool LowLevelMouseProc(WPARAM wParam, const MSLLHOOKSTRUCT& msllhs);
-	bool Disabled() const { return Disable; }
-	void Enable(bool enable) { Disable = !enable; }
-	HHOOK hHook() const { return Hook; }
+    bool LowLevelMouseProc(WPARAM wParam, const MSLLHOOKSTRUCT& msllhs);
+    bool Disabled() const { return Disable; }
+    void Enable(bool enable) { Disable = !enable; }
+    HHOOK hHook() const { return Hook; }
 
 private:
-	template<typename ...Args>
-	void Log(Args ... args) { Logger.Log(args...); }
+    template<typename ...Args>
+    void Log(Args ... args) { Logger.Log(args...); }
 
-	HHOOK Hook = 0;
-	bool  Disable = false;
-	MSLLHOOKSTRUCT SavedEvent = { 0, };
-	unsigned LButtonDownCounter = 0;
-	bool LButtonDown = false;
-	std::mutex Mutex;
-	LoggerImpl Logger;
+    HHOOK Hook = 0;
+    bool  Disable = false;
+    MSLLHOOKSTRUCT SavedEvent = { 0, };
+    unsigned LButtonDownCounter = 0;
+    bool LButtonDown = false;
+    std::mutex Mutex;
+    LoggerImpl Logger;
 };
 
 static HookDllImpl* Instance = nullptr;
 
 static bool MyEvent(WPARAM wParam)
 {
-	static WPARAM events[] = { WM_MOUSEMOVE, WM_LBUTTONDOWN, WM_LBUTTONUP/*, WM_RBUTTONDOWN, WM_RBUTTONUP*/ };
-	for (auto e : events)
-		if (e == wParam) return true;
-	return false;
+    static WPARAM events[] = { WM_MOUSEMOVE, WM_LBUTTONDOWN, WM_LBUTTONUP/*, WM_RBUTTONDOWN, WM_RBUTTONUP*/ };
+    for (auto e : events)
+        if (e == wParam) return true;
+    return false;
 }
 
 static LRESULT CALLBACK LowLevelMouseProc(int nCode, WPARAM wParam, LPARAM lParam)
 {
-	if (Instance == nullptr)
-		return 0; // Should never happen!
+    if (Instance == nullptr)
+        return 0; // Should never happen!
 
-	const HHOOK hHook = Instance->hHook();
+    const HHOOK hHook = Instance->hHook();
 
-	if (nCode != HC_ACTION || !MyEvent(wParam) || Instance->Disabled())
-		return ::CallNextHookEx(hHook, nCode, wParam, lParam);
+    if (nCode != HC_ACTION || !MyEvent(wParam) || Instance->Disabled())
+        return ::CallNextHookEx(hHook, nCode, wParam, lParam);
 
-	const MSLLHOOKSTRUCT& msllhs = *(MSLLHOOKSTRUCT*)lParam;
+    const MSLLHOOKSTRUCT& msllhs = *(MSLLHOOKSTRUCT*)lParam;
 
-	const ULONG_PTR MOUSEEVENTF_FROMTOUCH = 0xFF515700;
-	if ((msllhs.dwExtraInfo & MOUSEEVENTF_FROMTOUCH) == MOUSEEVENTF_FROMTOUCH)
-		return ::CallNextHookEx(hHook, nCode, wParam, lParam);
+    const ULONG_PTR MOUSEEVENTF_FROMTOUCH = 0xFF515700;
+    if ((msllhs.dwExtraInfo & MOUSEEVENTF_FROMTOUCH) == MOUSEEVENTF_FROMTOUCH)
+        return ::CallNextHookEx(hHook, nCode, wParam, lParam);
 
-	if (msllhs.flags != 0) // Injected event, don't process
-		return ::CallNextHookEx(hHook, nCode, wParam, lParam);
+    if (msllhs.flags != 0) // Injected event, don't process
+        return ::CallNextHookEx(hHook, nCode, wParam, lParam);
 
-	if (Instance->LowLevelMouseProc(wParam, msllhs))
-		return 1; // Stop further processing
+    if (Instance->LowLevelMouseProc(wParam, msllhs))
+        return 1; // Stop further processing
 
-	return ::CallNextHookEx(hHook, nCode, wParam, lParam);
+    return ::CallNextHookEx(hHook, nCode, wParam, lParam);
 }
 
 HookDllImpl::HookDllImpl() {
-	HINSTANCE hSelf = NULL;
-	::GetModuleHandleEx(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS | GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT, (wchar_t *)::LowLevelMouseProc, &hSelf);
-	Hook = ::SetWindowsHookEx(WH_MOUSE_LL, ::LowLevelMouseProc, hSelf, 0);
+    HINSTANCE hSelf = NULL;
+    ::GetModuleHandleEx(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS | GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT, (wchar_t *)::LowLevelMouseProc, &hSelf);
+    Hook = ::SetWindowsHookEx(WH_MOUSE_LL, ::LowLevelMouseProc, hSelf, 0);
 }
 
 HookDllImpl::~HookDllImpl() {
-	if (Hook)
-		::UnhookWindowsHookEx(Hook);
+    if (Hook)
+        ::UnhookWindowsHookEx(Hook);
 }
 
 bool HookDllImpl::LowLevelMouseProc(WPARAM wParam, const MSLLHOOKSTRUCT& msllhs)
 {
-	std::unique_lock<std::mutex> lock(Mutex, std::try_to_lock);
-	if (!lock.owns_lock())
-	{
-		Log("Can't lock\n");
-		return false;
-	}
+    std::unique_lock<std::mutex> lock(Mutex, std::try_to_lock);
+    if (!lock.owns_lock())
+    {
+        Log("Can't lock\n");
+        return false;
+    }
 
-	if (wParam == WM_LBUTTONUP|| wParam == WM_LBUTTONDOWN)
-	{
-		Log("wParam=0x%016llX flags=0x%08X dwExtraInfo=%016llX (%4d,%4d) time=%u\n"
-			, wParam, msllhs.flags, msllhs.dwExtraInfo, msllhs.pt.x, msllhs.pt.y, msllhs.time);
-	}
+    if (wParam == WM_LBUTTONUP || wParam == WM_LBUTTONDOWN)
+    {
+        Log("wParam=0x%016llX flags=0x%08X dwExtraInfo=%016llX (%4d,%4d) time=%u\n"
+            , wParam, msllhs.flags, msllhs.dwExtraInfo, msllhs.pt.x, msllhs.pt.y, msllhs.time);
+    }
 
-	if (wParam == WM_LBUTTONDOWN)
-	{
-		if (LButtonDownCounter == 0) SavedEvent = msllhs;
-		else                         SavedEvent.time = msllhs.time;
-		LButtonDownCounter++;
-		return true;
-	}
+    if (wParam == WM_LBUTTONDOWN)
+    {
+        if (LButtonDownCounter == 0) SavedEvent = msllhs;
+        else                         SavedEvent.time = msllhs.time;
+        LButtonDownCounter++;
+        return true;
+    }
 
-	if (wParam == WM_LBUTTONUP && LButtonDownCounter == 0)
-	{
-		// Sticky drag mode?
-		Log("Excess button up\n");
-		return true;
-	}
+    if (wParam == WM_LBUTTONUP && LButtonDownCounter == 0)
+    {
+        // Sticky drag mode?
+        Log("Excess button up\n");
+        return true;
+    }
 
-	if (wParam == WM_LBUTTONUP && LButtonDownCounter > 1)
-	{
-		Log("Nested button up\n");
-		LButtonDownCounter--;
-		return true;
-	}
+    if (wParam == WM_LBUTTONUP && LButtonDownCounter > 1)
+    {
+        Log("Nested button up\n");
+        LButtonDownCounter--;
+        return true;
+    }
 
-	if ((wParam == WM_LBUTTONUP || wParam == WM_MOUSEMOVE) && SavedEvent.time != 0)
-	{
-		// Disable too fast clicks!
-		if (SavedEvent.time <= msllhs.time && msllhs.time - SavedEvent.time < 50)
-		{
-			if (wParam == WM_LBUTTONUP)
-			{
-				SavedEvent.time = 0;
-				LButtonDownCounter = 0;
-				LButtonDown = false;
-				Log("Skip too short click\n");
-			}
-			else
-			{
-				Log("Skip too short move\n");
-			}
-		}
-		else
-		{
-			switch (wParam)
-			{
-			case WM_LBUTTONUP:
-				if (!LButtonDown)
-					mouse_event(MOUSEEVENTF_LEFTDOWN, 0, 0, 0, 0);
-				mouse_event(MOUSEEVENTF_LEFTUP, 0, 0, 0, 0);
-				Log("Button up simulated\n");
-				LButtonDownCounter = 0;
-				SavedEvent.time = 0;
-				LButtonDown = false;
-				break;
-			case WM_MOUSEMOVE:
-				if (LButtonDown) return false;
+    if ((wParam == WM_LBUTTONUP || wParam == WM_MOUSEMOVE) && SavedEvent.time != 0)
+    {
+        // Disable too fast clicks!
+        if (SavedEvent.time <= msllhs.time && msllhs.time - SavedEvent.time < 50)
+        {
+            if (wParam == WM_LBUTTONUP)
+            {
+                SavedEvent.time = 0;
+                LButtonDownCounter = 0;
+                LButtonDown = false;
+                Log("Skip too short click\n");
+            }
+            else
+            {
+                Log("Skip too short move\n");
+            }
+        }
+        else
+        {
+            switch (wParam)
+            {
+            case WM_LBUTTONUP:
+                if (!LButtonDown)
+                    mouse_event(MOUSEEVENTF_LEFTDOWN, 0, 0, 0, 0);
+                mouse_event(MOUSEEVENTF_LEFTUP, 0, 0, 0, 0);
+                Log("Button up simulated\n");
+                LButtonDownCounter = 0;
+                SavedEvent.time = 0;
+                LButtonDown = false;
+                break;
+            case WM_MOUSEMOVE:
+                if (LButtonDown) return false;
 
-				mouse_event(MOUSEEVENTF_LEFTDOWN, 0, 0, 0, 0);
-				mouse_event(MOUSEEVENTF_MOVE, msllhs.pt.x - SavedEvent.pt.x, msllhs.pt.y - SavedEvent.pt.y, 0, 0);
-				LButtonDown = true;
-				// Sticky button: drag mode
-				LButtonDownCounter = 0;
-				break;
-			}
-		}
+                mouse_event(MOUSEEVENTF_LEFTDOWN, 0, 0, 0, 0);
+                mouse_event(MOUSEEVENTF_MOVE, msllhs.pt.x - SavedEvent.pt.x, msllhs.pt.y - SavedEvent.pt.y, 0, 0);
+                LButtonDown = true;
+                // Sticky button: drag mode
+                LButtonDownCounter = 0;
+                break;
+            }
+        }
 
-		return true;
-	}
+        return true;
+    }
 
-	if (wParam == WM_LBUTTONUP)
-	{
-		Log("Button up processed\n");
-		return true;
-	}
+    if (wParam == WM_LBUTTONUP)
+    {
+        Log("Button up processed\n");
+        return true;
+    }
 
-	return false;
+    return false;
 }
 
 HookDll::HookDll()
 {
-	Instance = new HookDllImpl();
+    Instance = new HookDllImpl();
 }
 
 HookDll::~HookDll()
 {
-	HookDllImpl* impl = Instance;
-	if (impl)
-	{
-		Instance = nullptr;
-		delete impl;
-	}
+    HookDllImpl* impl = Instance;
+    if (impl)
+    {
+        Instance = nullptr;
+        delete impl;
+    }
 }
 
 bool HookDll::Disabled()
 {
-	return Instance == nullptr || Instance->Disabled();
+    return Instance == nullptr || Instance->Disabled();
 }
 
 void HookDll::Enable(bool enable)
 {
-	if (Instance) Instance->Enable(enable);
+    if (Instance) Instance->Enable(enable);
 }
