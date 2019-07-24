@@ -53,9 +53,11 @@ private:
 class RDPDetector {
 public:
     bool Detected() {
+#if !_DEBUG
         DWORD now = ::GetTickCount();
         if (now < LastCheck || now - LastCheck > 5000)
             IsRDP = ::GetSystemMetrics(SM_REMOTESESSION);
+#endif
         return IsRDP;
     }
 private:
