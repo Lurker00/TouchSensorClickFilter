@@ -50,6 +50,19 @@ private:
 #endif
 };
 
+class RDPDetector {
+public:
+    bool Detected() {
+        DWORD now = ::GetTickCount();
+        if (now < LastCheck || now - LastCheck > 5000)
+            IsRDP = ::GetSystemMetrics(SM_REMOTESESSION);
+        return IsRDP;
+    }
+private:
+    DWORD LastCheck = 0;
+    bool IsRDP      = false;
+};
+
 class HookDllImpl {
     /******************************************
         In no a test I was able to click faster than in 50 ms.
@@ -62,7 +75,7 @@ public:
 
     bool LowLevelMouseProc(WPARAM wParam, const MSLLHOOKSTRUCT& msllhs);
     void TimerProc();
-    bool Disabled() const { return Disable; }
+    bool Disabled() { return Disable || Remote.Detected(); }
     void Enable(bool enable) { Disable = !enable; }
     HHOOK hHook() const { return Hook; }
 
@@ -93,6 +106,8 @@ private:
     unsigned LButtonDownCounter = 0;
     bool LButtonDown = false;
     std::mutex Mutex;
+
+    RDPDetector Remote;
 };
 
 static HookDllImpl* Instance = nullptr;
@@ -175,6 +190,9 @@ static bool TooClose(const POINT& p1, const POINT& p2)
 bool HookDllImpl::LowLevelMouseProc(WPARAM wParam, const MSLLHOOKSTRUCT& msllhs)
 {
     std::lock_guard<std::mutex> lock(Mutex);
+
+    if (SavedEvent.time == 0 && Remote.Detected())
+        return false; // Stop if idle and in RDP
 
     if (wParam == WM_LBUTTONUP || wParam == WM_LBUTTONDOWN)
     {
