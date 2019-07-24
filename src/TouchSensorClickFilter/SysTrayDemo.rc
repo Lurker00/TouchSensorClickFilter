@@ -38,7 +38,7 @@ IDI_SMALL               ICON                    "small.ico"
 // Menu
 //
 
-IDC_SYSTRAYDEMO MENU 
+IDC_APP_CLASS MENU
 BEGIN
     POPUP "SysTrayMenu"
     BEGIN
@@ -60,7 +60,7 @@ END
 // Accelerator
 //
 
-IDC_SYSTRAYDEMO ACCELERATORS 
+IDC_APP_CLASS ACCELERATORS
 BEGIN
     "?",            IDM_ABOUT,              ASCII,  ALT
     "/",            IDM_ABOUT,              ASCII,  ALT
@@ -120,9 +120,9 @@ END
 
 STRINGTABLE 
 BEGIN
-    IDS_APP_TITLE           "SysTrayDemo"
-    IDS_APPTOOLTIP          "SysTray Demo"
-    IDC_SYSTRAYDEMO         "SYSTRAYDEMO"
+    IDS_APP_TITLE           "TouchSensor Click Filter"
+    IDS_APPTOOLTIP          "TouchSensor Click Filter"
+    IDC_APP_CLASS           "TouchSensorClickFilter"
 END
 
 #endif    // Hebrew resources

@@ -23,43 +23,47 @@ LRESULT CALLBACK	WndProc(HWND, UINT, WPARAM, LPARAM);
 INT_PTR CALLBACK	About(HWND, UINT, WPARAM, LPARAM);
 
 int APIENTRY _tWinMain(HINSTANCE hInstance,
-                     HINSTANCE hPrevInstance,
-                     LPTSTR    lpCmdLine,
-                     int       nCmdShow)
+                       HINSTANCE hPrevInstance,
+                       LPTSTR    lpCmdLine,
+                       int       nCmdShow)
 {
-	UNREFERENCED_PARAMETER(hPrevInstance);
-	UNREFERENCED_PARAMETER(lpCmdLine);
+    UNREFERENCED_PARAMETER(hPrevInstance);
+    UNREFERENCED_PARAMETER(lpCmdLine);
 
-	// TODO: Place code here.
-	MSG msg;
-	HACCEL hAccelTable;
+    // TODO: Place code here.
+    MSG msg;
+    HACCEL hAccelTable;
 
-	// Initialize global strings
-	LoadString(hInstance, IDS_APP_TITLE, szTitle, MAX_LOADSTRING);
-	LoadString(hInstance, IDC_SYSTRAYDEMO, szWindowClass, MAX_LOADSTRING);
+    // Initialize global strings
+    LoadString(hInstance, IDS_APP_TITLE, szTitle, MAX_LOADSTRING);
+    LoadString(hInstance, IDC_APP_CLASS, szWindowClass, MAX_LOADSTRING);
 
-	MyRegisterClass(hInstance);
+    // Only one instance is allowed:
+    if (FindWindowW(szWindowClass, szTitle) != NULL)
+        return 0;
 
-	// Perform application initialization:
-	if (!InitInstance (hInstance, nCmdShow))
-	{
-		return FALSE;
-	}
+    MyRegisterClass(hInstance);
 
-	hAccelTable = LoadAccelerators(hInstance, MAKEINTRESOURCE(IDC_SYSTRAYDEMO));
+    // Perform application initialization:
+    if (!InitInstance(hInstance, nCmdShow))
+    {
+        return FALSE;
+    }
 
-	HookDll hook;
-	// Main message loop:
-	while (GetMessage(&msg, NULL, 0, 0))
-	{
-		if (!TranslateAccelerator(msg.hwnd, hAccelTable, &msg))
-		{
-			TranslateMessage(&msg);
-			DispatchMessage(&msg);
-		}
-	}
+    hAccelTable = LoadAccelerators(hInstance, MAKEINTRESOURCE(IDC_APP_CLASS));
 
-	return (int) msg.wParam;
+    HookDll hook;
+    // Main message loop:
+    while (GetMessage(&msg, NULL, 0, 0))
+    {
+        if (!TranslateAccelerator(msg.hwnd, hAccelTable, &msg))
+        {
+            TranslateMessage(&msg);
+            DispatchMessage(&msg);
+        }
+    }
+
+    return (int)msg.wParam;
 }
 
 //
@@ -89,7 +93,7 @@ ATOM MyRegisterClass(HINSTANCE hInstance)
 	wcex.hIcon			= LoadIcon(hInstance, MAKEINTRESOURCE(IDI_SYSTRAYDEMO));
 	wcex.hCursor		= LoadCursor(NULL, IDC_ARROW);
 	wcex.hbrBackground	= (HBRUSH)(COLOR_WINDOW+1);
-	wcex.lpszMenuName	= MAKEINTRESOURCE(IDC_SYSTRAYDEMO);
+	wcex.lpszMenuName	= MAKEINTRESOURCE(IDC_APP_CLASS);
 	wcex.lpszClassName	= szWindowClass;
 	wcex.hIconSm		= LoadIcon(wcex.hInstance, MAKEINTRESOURCE(IDI_SMALL));
 
