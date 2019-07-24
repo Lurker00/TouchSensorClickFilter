@@ -15,13 +15,11 @@
 #undef APSTUDIO_READONLY_SYMBOLS
 
 /////////////////////////////////////////////////////////////////////////////
-// Hebrew resources
+// English (U.S.) resources
 
-#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_HEB)
-#ifdef _WIN32
-LANGUAGE LANG_HEBREW, SUBLANG_DEFAULT
-#pragma code_page(1255)
-#endif //_WIN32
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
+LANGUAGE LANG_ENGLISH, SUBLANG_DEFAULT
+#pragma code_page(1252)
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -31,7 +29,9 @@ LANGUAGE LANG_HEBREW, SUBLANG_DEFAULT
 // Icon with lowest ID value placed first to ensure application icon
 // remains consistent on all systems.
 IDI_SYSTRAYDEMO         ICON                    "SysTrayDemo.ico"
+
 IDI_SMALL               ICON                    "small.ico"
+
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -72,16 +72,16 @@ END
 // Dialog
 //
 
-IDD_ABOUTBOX DIALOGEX 22, 17, 230, 75
+IDD_ABOUTBOX DIALOGEX 22, 17, 230, 52
 STYLE DS_SETFONT | DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
 CAPTION "About"
 FONT 8, "System", 0, 0, 0x0
 BEGIN
     ICON            IDI_SYSTRAYDEMO,IDC_MYICON,14,9,20,20
-    LTEXT           "SysTrayDemo Version 1.0",IDC_STATIC,49,10,119,8,SS_NOPREFIX
-    LTEXT           "Copyright (C) 2007",IDC_STATIC,49,20,119,8
-    DEFPUSHBUTTON   "OK",IDOK,195,6,30,11,WS_GROUP
-    LTEXT           "Demo Developed By Mark Zitnik",IDC_STATIC,49,31,108,8
+    CTEXT           "TouchSensorClickFilter Version 1.0",IDC_STATIC,49,10,119,8,SS_NOPREFIX
+    CTEXT           "Copyright (C) 2019 Lurker",IDC_STATIC,49,20,119,8
+    DEFPUSHBUTTON   "OK",IDOK,195,10,30,11,WS_GROUP
+    CTEXT           "https://github.com/Lurker00/TouchSensorClickFilter",IDC_STATIC,4,31,225,8
 END
 
 
@@ -115,17 +115,33 @@ END
 
 /////////////////////////////////////////////////////////////////////////////
 //
+// DESIGNINFO
+//
+
+#ifdef APSTUDIO_INVOKED
+GUIDELINES DESIGNINFO
+BEGIN
+    IDD_ABOUTBOX, DIALOG
+    BEGIN
+        BOTTOMMARGIN, 50
+    END
+END
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
 // String Table
 //
 
-STRINGTABLE 
+STRINGTABLE
 BEGIN
     IDS_APP_TITLE           "TouchSensor Click Filter"
-    IDS_APPTOOLTIP          "TouchSensor Click Filter"
+    IDS_APPTOOLTIP          "Touch sensor click filter"
     IDC_APP_CLASS           "TouchSensorClickFilter"
 END
 
-#endif    // Hebrew resources
+#endif    // English (U.S.) resources
 /////////////////////////////////////////////////////////////////////////////
 
 
