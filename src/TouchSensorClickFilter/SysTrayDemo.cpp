@@ -28,7 +28,7 @@ int APIENTRY _tWinMain(HINSTANCE hInstance,
                        int       nCmdShow)
 {
     UNREFERENCED_PARAMETER(hPrevInstance);
-    if (_tcscmp(lpCmdLine, _T("demonize")) == 0)
+    if (_tcscmp(lpCmdLine, _T("daemonize")) == 0)
     { // "Fork" itself and quit
         STARTUPINFO si = { sizeof(si) };
         PROCESS_INFORMATION pi;
