@@ -114,7 +114,9 @@ int APIENTRY _tWinMain(HINSTANCE hInstance,
         }
     }
 
-    Reporter.Report(_T("Stopped"), EventReporter::eStop);
+    TCHAR szBuffer[128];
+    _stprintf(szBuffer, _T("Stopped. %u clicks and %u moves eliminated."), hook.Clicks(), hook.Moves());
+    Reporter.Report(szBuffer, EventReporter::eStop);
 
     return (int)msg.wParam;
 }

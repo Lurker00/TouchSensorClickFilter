@@ -81,6 +81,8 @@ public:
     void Enable(bool enable) { Disable = !enable; }
     HHOOK hHook() const { return Hook; }
 
+    unsigned Clicks() const { return ClicksEliminated; }
+    unsigned Moves()  const { return MovesEliminated;  }
     Logger Log;
 
 private:
@@ -110,6 +112,8 @@ private:
     std::mutex Mutex;
 
     RDPDetector Remote;
+    unsigned ClicksEliminated = 0;
+    unsigned MovesEliminated  = 0;
 };
 
 static HookDllImpl* Instance = nullptr;
@@ -243,6 +247,7 @@ bool HookDllImpl::LowLevelMouseProc(WPARAM wParam, const MSLLHOOKSTRUCT& msllhs)
             if (tooFast)
             {
                 StopTimer();
+                ClicksEliminated++;
                 Log.Log("Skip too fast click");
                 return true;
             }
@@ -268,12 +273,14 @@ bool HookDllImpl::LowLevelMouseProc(WPARAM wParam, const MSLLHOOKSTRUCT& msllhs)
         {
             if (tooFast)
             {
+                MovesEliminated++;
                 Log.Log("Skip too fast move");
                 return true;
             }
 
             if (LButtonDownCounter > 0 && TooClose(msllhs.pt, SavedEvent.pt))
             {
+                MovesEliminated++;
                 Log.Log("Skip too short move");
                 return true;
             }
@@ -341,3 +348,6 @@ void HookDll::Enable(bool enable)
 {
     if (Instance) Instance->Enable(enable);
 }
+
+unsigned HookDll::Clicks() const { return Instance == nullptr ? 0 : Instance->Clicks(); }
+unsigned HookDll::Moves()  const { return Instance == nullptr ? 0 : Instance->Moves();  }
