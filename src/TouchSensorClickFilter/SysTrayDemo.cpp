@@ -55,9 +55,15 @@ int APIENTRY _tWinMain(HINSTANCE hInstance,
     LoadString(hInstance, IDC_APP_CLASS, szWindowClass, MAX_LOADSTRING);
 
     EventReporter Reporter(szWindowClass);
-    Reporter.Report(_T("Started"));
 
-    if (_tcscmp(lpCmdLine, _T("daemonize")) == 0)
+    // Only one instance is allowed:
+    if (FindWindow(szWindowClass, szTitle) != NULL)
+    {
+        Reporter.Report(_T("Already running, quit"), EVENTLOG_WARNING_TYPE);
+        return 0;
+    }
+
+    if (_tcsstr(lpCmdLine, _T("daemonize")) != NULL)
     { // "Fork" itself and quit
         STARTUPINFO si = { sizeof(si) };
         PROCESS_INFORMATION pi;
@@ -71,17 +77,10 @@ int APIENTRY _tWinMain(HINSTANCE hInstance,
         {
             CloseHandle(pi.hProcess);
             CloseHandle(pi.hThread);
-            Reporter.Report(_T("Daemonized"));
+            Reporter.Report(_T("Daemonizing"));
         }
         else
             Reporter.Report(_T("Failed to daemonize, quit"), EVENTLOG_ERROR_TYPE);
-        return 0;
-    }
-
-    // Only one instance is allowed:
-    if (FindWindow(szWindowClass, szTitle) != NULL)
-    {
-        Reporter.Report(_T("Already running, quit"), EVENTLOG_WARNING_TYPE);
         return 0;
     }
 
@@ -95,6 +94,8 @@ int APIENTRY _tWinMain(HINSTANCE hInstance,
     }
 
     HACCEL hAccelTable = LoadAccelerators(hInstance, MAKEINTRESOURCE(IDC_APP_CLASS));
+
+    Reporter.Report(_T("Started"));
 
     HookDll hook; // Install mouse hook
 
@@ -110,6 +111,7 @@ int APIENTRY _tWinMain(HINSTANCE hInstance,
     }
 
     Reporter.Report(_T("Stopped"));
+
     return (int)msg.wParam;
 }
 
