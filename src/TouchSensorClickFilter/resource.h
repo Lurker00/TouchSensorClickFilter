@@ -19,10 +19,8 @@
 #define ID_SYSTRAYMENU_DISABLE          32775
 #define ID_SYSTRAYMENU_TEST1            32776
 #define ID_SYSTRAYMENU_TEST2            32777
-#define IDM_DISABLE                     32778
-#define IDM_ENABLE                      32779
-#define ID_SYSTRAYMENU_SEP              32780
-#define IDM_SEP                         32781
+#define IDM_ENABLED                     32778
+#define ID_SYSTRAYMENU_SEP              32779
 #define IDC_STATIC                      -1
 
 // Next default values for new objects
@@ -31,7 +29,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NO_MFC                     1
 #define _APS_NEXT_RESOURCE_VALUE        129
-#define _APS_NEXT_COMMAND_VALUE         32782
+#define _APS_NEXT_COMMAND_VALUE         32780
 #define _APS_NEXT_CONTROL_VALUE         1000
 #define _APS_NEXT_SYMED_VALUE           110
 #endif

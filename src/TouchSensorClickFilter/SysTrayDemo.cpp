@@ -186,10 +186,10 @@ BOOL InitInstance(HINSTANCE hInstance, int /*nCmdShow*/)
     HICON hMainIcon = LoadIcon(hInstance, (LPCTSTR)MAKEINTRESOURCE(IDI_APP_ICON));
 
     nidApp.cbSize = sizeof(NOTIFYICONDATA);           // sizeof the struct in bytes 
-    nidApp.hWnd = (HWND)hWnd;                         // handle of the window which will process this app. messages 
-    nidApp.uID = IDI_APP_ICON;                        // ID of the icon that will appear in the system tray 
+    nidApp.hWnd   = hWnd;                             // handle of the window which will process this app. messages 
+    nidApp.uID    = IDI_APP_ICON;                     // ID of the icon that will appear in the system tray 
     nidApp.uFlags = NIF_ICON | NIF_MESSAGE | NIF_TIP; // ORing of all the flags 
-    nidApp.hIcon = hMainIcon;                         // handle of the Icon to be displayed, obtained from LoadIcon 
+    nidApp.hIcon  = hMainIcon;                        // handle of the Icon to be displayed, obtained from LoadIcon 
     nidApp.uCallbackMessage = WM_USER_SHELLICON;
     LoadString(hInstance, IDS_APPTOOLTIP, nidApp.szTip, MAX_LOADSTRING);
     Shell_NotifyIcon(NIM_ADD, &nidApp);
@@ -221,16 +221,11 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         case WM_LBUTTONDOWN:
         case WM_RBUTTONDOWN:
             GetCursorPos(&lpClickPoint);
-            HMENU hPopMenu = CreatePopupMenu();
-            InsertMenu(hPopMenu, 0xFFFFFFFF, MF_BYPOSITION | MF_STRING, IDM_ABOUT, _T("About"));
-            InsertMenu(hPopMenu, 0xFFFFFFFF, MF_SEPARATOR, IDM_SEP, _T("SEP"));
+            HMENU hPopMenu = GetSubMenu(GetMenu(hWnd), 0);
             if (HookDll::Disabled())
-                InsertMenu(hPopMenu, 0xFFFFFFFF, MF_BYPOSITION | MF_STRING, IDM_ENABLE, _T("Enable"));
+                ::CheckMenuItem(hPopMenu, IDM_ENABLED, MF_UNCHECKED | MF_BYCOMMAND);
             else
-                InsertMenu(hPopMenu, 0xFFFFFFFF, MF_BYPOSITION | MF_STRING, IDM_DISABLE, _T("Disable"));
-            InsertMenu(hPopMenu, 0xFFFFFFFF, MF_SEPARATOR, IDM_SEP, _T("SEP"));
-            InsertMenu(hPopMenu, 0xFFFFFFFF, MF_BYPOSITION | MF_STRING, IDM_EXIT, _T("Exit"));
-
+                ::CheckMenuItem(hPopMenu, IDM_ENABLED, MF_CHECKED | MF_BYCOMMAND);
             SetForegroundWindow(hWnd);
             TrackPopupMenu(hPopMenu, TPM_LEFTALIGN | TPM_LEFTBUTTON | TPM_BOTTOMALIGN, lpClickPoint.x, lpClickPoint.y, 0, hWnd, NULL);
             return TRUE;
@@ -245,11 +240,8 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         case IDM_ABOUT:
             DialogBox(hInst, MAKEINTRESOURCE(IDD_ABOUTBOX), hWnd, About);
             break;
-        case IDM_DISABLE:
-            HookDll::Enable(false);
-            break;
-        case IDM_ENABLE:
-            HookDll::Enable(true);
+        case IDM_ENABLED:
+            HookDll::Enable(HookDll::Disabled());
             break;
         case IDM_EXIT:
             Shell_NotifyIcon(NIM_DELETE, &nidApp);

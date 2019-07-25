@@ -40,13 +40,11 @@ IDC_APP_CLASS MENU
 BEGIN
     POPUP "SysTrayMenu"
     BEGIN
-        MENUITEM "&About ...",                  IDM_ABOUT
+        MENUITEM "&About...",                   IDM_ABOUT
         MENUITEM SEPARATOR
-        MENUITEM "Enable",                      IDM_ENABLE
-        MENUITEM "Disable",                     IDM_DISABLE
+        MENUITEM "Enabled",                     IDM_ENABLED
         MENUITEM SEPARATOR
         MENUITEM "E&xit",                       IDM_EXIT
-        MENUITEM "SEP",                         IDM_SEP
     END
 END
 
