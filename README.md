@@ -39,3 +39,7 @@ I've derived [SysTrayDemo](https://www.codeproject.com/Articles/18783/Example-of
 ## Copyright (c) 2019
 
 ... is mine, but I dunno which license to publish it under :) If you derive my work, don't forget to mention the primary source (me and this place).
+
+## History
+
+* 0.90 - first public release.
