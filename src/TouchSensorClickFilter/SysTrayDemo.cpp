@@ -22,12 +22,41 @@ BOOL             InitInstance(HINSTANCE, int);
 LRESULT CALLBACK WndProc(HWND, UINT, WPARAM, LPARAM);
 INT_PTR CALLBACK About(HWND, UINT, WPARAM, LPARAM);
 
+class EventReporter
+{
+public:
+    EventReporter(const TCHAR* eventSource)
+    {
+        hEventSource = RegisterEventSource(NULL, eventSource);
+    }
+    ~EventReporter()
+    {
+        if (hEventSource != NULL)
+            ::DeregisterEventSource(hEventSource);
+    }
+    void Report(const TCHAR* event, WORD wType = EVENTLOG_SUCCESS)
+    {
+        if (hEventSource != NULL)
+            ReportEvent(hEventSource, wType, 0, 0, NULL, 1, 0, &event, NULL);
+    }
+private:
+    HANDLE hEventSource;
+};
+
 int APIENTRY _tWinMain(HINSTANCE hInstance,
                        HINSTANCE hPrevInstance,
                        LPTSTR    lpCmdLine,
                        int       nCmdShow)
 {
     UNREFERENCED_PARAMETER(hPrevInstance);
+
+    // Initialize global strings
+    LoadString(hInstance, IDS_APP_TITLE, szTitle, MAX_LOADSTRING);
+    LoadString(hInstance, IDC_APP_CLASS, szWindowClass, MAX_LOADSTRING);
+
+    EventReporter Reporter(szWindowClass);
+    Reporter.Report(_T("Started"));
+
     if (_tcscmp(lpCmdLine, _T("daemonize")) == 0)
     { // "Fork" itself and quit
         STARTUPINFO si = { sizeof(si) };
@@ -42,23 +71,28 @@ int APIENTRY _tWinMain(HINSTANCE hInstance,
         {
             CloseHandle(pi.hProcess);
             CloseHandle(pi.hThread);
+            Reporter.Report(_T("Daemonized"));
         }
+        else
+            Reporter.Report(_T("Failed to daemonize, quit"), EVENTLOG_ERROR_TYPE);
         return 0;
     }
 
-    // Initialize global strings
-    LoadString(hInstance, IDS_APP_TITLE, szTitle, MAX_LOADSTRING);
-    LoadString(hInstance, IDC_APP_CLASS, szWindowClass, MAX_LOADSTRING);
-
     // Only one instance is allowed:
     if (FindWindow(szWindowClass, szTitle) != NULL)
+    {
+        Reporter.Report(_T("Already running, quit"), EVENTLOG_WARNING_TYPE);
         return 0;
+    }
 
     MyRegisterClass(hInstance);
 
     // Perform application initialization:
     if (!InitInstance(hInstance, nCmdShow))
+    {
+        Reporter.Report(_T("InitInstance failed, quit"), EVENTLOG_ERROR_TYPE);
         return 0;
+    }
 
     HACCEL hAccelTable = LoadAccelerators(hInstance, MAKEINTRESOURCE(IDC_APP_CLASS));
 
@@ -75,6 +109,7 @@ int APIENTRY _tWinMain(HINSTANCE hInstance,
         }
     }
 
+    Reporter.Report(_T("Stopped"));
     return (int)msg.wParam;
 }
 
