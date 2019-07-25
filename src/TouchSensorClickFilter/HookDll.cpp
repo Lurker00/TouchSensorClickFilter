@@ -349,5 +349,5 @@ void HookDll::Enable(bool enable)
     if (Instance) Instance->Enable(enable);
 }
 
-unsigned HookDll::Clicks() const { return Instance == nullptr ? 0 : Instance->Clicks(); }
-unsigned HookDll::Moves()  const { return Instance == nullptr ? 0 : Instance->Moves();  }
+unsigned HookDll::Clicks() { return Instance == nullptr ? 0 : Instance->Clicks(); }
+unsigned HookDll::Moves()  { return Instance == nullptr ? 0 : Instance->Moves();  }

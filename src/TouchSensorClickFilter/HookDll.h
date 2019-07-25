@@ -17,8 +17,8 @@ public:
     static bool Disabled();
     static void Enable(bool enable);
 
-    unsigned Clicks() const;
-    unsigned Moves()  const;
+    static unsigned Clicks();
+    static unsigned Moves();
 };
 
 #endif // HOOKDLL_H_

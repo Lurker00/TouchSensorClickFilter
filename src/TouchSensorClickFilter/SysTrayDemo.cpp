@@ -28,24 +28,35 @@ public:
     EventReporter(const TCHAR* eventSource)
     {
         hEventSource = RegisterEventSource(NULL, eventSource);
+        pInstance = this;
     }
     ~EventReporter()
     {
         if (hEventSource != NULL)
             ::DeregisterEventSource(hEventSource);
+        pInstance = nullptr;
     }
-    enum Events
-    {
-        eGeneric, eStart, eStop, eDaemonize, eAlreadyRunning
-    };
+
+    enum Events { eGeneric, eStart, eStop, eDaemonize, eAlreadyRunning };
     void Report(const TCHAR* event, Events eventId, WORD wType = EVENTLOG_SUCCESS)
     {
         if (hEventSource != NULL)
             ReportEvent(hEventSource, wType, 0, eventId, NULL, 1, 0, &event, NULL);
     }
+
+    static EventReporter& Instance() { return *pInstance; }
 private:
     HANDLE hEventSource;
+    static EventReporter* pInstance;
 };
+EventReporter* EventReporter::pInstance = nullptr;
+
+static void StopEvent(const TCHAR* reason)
+{
+    TCHAR szBuffer[128];
+    _stprintf(szBuffer, _T("%s. %u clicks and %u moves eliminated."), reason, HookDll::Clicks(), HookDll::Moves());
+    EventReporter::Instance().Report(szBuffer, EventReporter::eStop);
+}
 
 int APIENTRY _tWinMain(HINSTANCE hInstance,
                        HINSTANCE hPrevInstance,
@@ -58,12 +69,12 @@ int APIENTRY _tWinMain(HINSTANCE hInstance,
     LoadString(hInstance, IDS_APP_TITLE, szTitle, MAX_LOADSTRING);
     LoadString(hInstance, IDC_APP_CLASS, szWindowClass, MAX_LOADSTRING);
 
-    EventReporter Reporter(szWindowClass);
+    EventReporter reporter(szWindowClass);
 
     // Only one instance is allowed:
     if (FindWindow(szWindowClass, szTitle) != NULL)
     {
-        Reporter.Report(_T("Already running, quit"), EventReporter::eAlreadyRunning, EVENTLOG_WARNING_TYPE);
+        reporter.Report(_T("Already running, quit"), EventReporter::eAlreadyRunning, EVENTLOG_WARNING_TYPE);
         return 0;
     }
 
@@ -81,10 +92,10 @@ int APIENTRY _tWinMain(HINSTANCE hInstance,
         {
             CloseHandle(pi.hProcess);
             CloseHandle(pi.hThread);
-            Reporter.Report(_T("Daemonizing"), EventReporter::eDaemonize);
+            reporter.Report(_T("Daemonizing"), EventReporter::eDaemonize);
         }
         else
-            Reporter.Report(_T("Failed to daemonize, quit"), EventReporter::eGeneric, EVENTLOG_ERROR_TYPE);
+            reporter.Report(_T("Failed to daemonize, quit"), EventReporter::eGeneric, EVENTLOG_ERROR_TYPE);
         return 0;
     }
 
@@ -93,13 +104,13 @@ int APIENTRY _tWinMain(HINSTANCE hInstance,
     // Perform application initialization:
     if (!InitInstance(hInstance, nCmdShow))
     {
-        Reporter.Report(_T("InitInstance failed, quit"), EventReporter::eGeneric, EVENTLOG_ERROR_TYPE);
+        reporter.Report(_T("InitInstance failed, quit"), EventReporter::eGeneric, EVENTLOG_ERROR_TYPE);
         return 0;
     }
 
     HACCEL hAccelTable = LoadAccelerators(hInstance, MAKEINTRESOURCE(IDC_APP_CLASS));
 
-    Reporter.Report(_T("Started"), EventReporter::eStart);
+    reporter.Report(_T("Started"), EventReporter::eStart);
 
     HookDll hook; // Install mouse hook
 
@@ -114,9 +125,7 @@ int APIENTRY _tWinMain(HINSTANCE hInstance,
         }
     }
 
-    TCHAR szBuffer[128];
-    _stprintf(szBuffer, _T("Stopped. %u clicks and %u moves eliminated."), hook.Clicks(), hook.Moves());
-    Reporter.Report(szBuffer, EventReporter::eStop);
+    StopEvent(_T("Stopped"));
 
     return (int)msg.wParam;
 }
@@ -169,7 +178,7 @@ BOOL InitInstance(HINSTANCE hInstance, int /*nCmdShow*/)
 {
     hInst = hInstance; // Store instance handle in our global variable
 
-    HWND hWnd = CreateWindow(szWindowClass, szTitle, WS_OVERLAPPEDWINDOW,
+    HWND hWnd = CreateWindowEx(0, szWindowClass, szTitle, WS_OVERLAPPEDWINDOW,
         CW_USEDEFAULT, 0, CW_USEDEFAULT, 0, NULL, NULL, hInstance, NULL);
 
     if (!hWnd) return FALSE;
@@ -244,7 +253,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             break;
         case IDM_EXIT:
             Shell_NotifyIcon(NIM_DELETE, &nidApp);
-            DestroyWindow(hWnd);
+            PostMessage(hWnd, WM_CLOSE, 0, 0);
             break;
         default:
             return DefWindowProc(hWnd, message, wParam, lParam);
@@ -257,6 +266,9 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         EndPaint(hWnd, &ps);
         break;
     */
+    case WM_ENDSESSION:
+        StopEvent(_T("Session ends"));
+        break;
     case WM_DESTROY:
         PostQuitMessage(0);
         break;
