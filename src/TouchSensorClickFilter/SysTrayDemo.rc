@@ -28,7 +28,8 @@ LANGUAGE LANG_ENGLISH, SUBLANG_DEFAULT
 
 // Icon with lowest ID value placed first to ensure application icon
 // remains consistent on all systems.
-IDI_APP_ICON         ICON                    "SysTrayDemo.ico"
+IDI_APP_ICON           ICON   "enabled.ico"
+IDI_APP_ICON_DISABLED  ICON   "disabled.ico"
 
 
 /////////////////////////////////////////////////////////////////////////////

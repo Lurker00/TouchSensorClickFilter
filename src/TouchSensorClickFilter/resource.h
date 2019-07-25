@@ -10,6 +10,7 @@
 #define IDS_APPTOOLTIP                  104
 #define IDM_EXIT                        105
 #define IDI_APP_ICON                    107
+#define IDI_APP_ICON_DISABLED           108
 #define IDC_APP_CLASS                   109
 #define IDR_MAINFRAME                   128
 #define ID_S_                           32771

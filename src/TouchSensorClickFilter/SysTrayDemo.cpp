@@ -183,15 +183,13 @@ BOOL InitInstance(HINSTANCE hInstance, int /*nCmdShow*/)
 
     if (!hWnd) return FALSE;
 
-    HICON hMainIcon = LoadIcon(hInstance, (LPCTSTR)MAKEINTRESOURCE(IDI_APP_ICON));
-
     nidApp.cbSize = sizeof(NOTIFYICONDATA);           // sizeof the struct in bytes 
     nidApp.hWnd   = hWnd;                             // handle of the window which will process this app. messages 
     nidApp.uID    = IDI_APP_ICON;                     // ID of the icon that will appear in the system tray 
     nidApp.uFlags = NIF_ICON | NIF_MESSAGE | NIF_TIP; // ORing of all the flags 
-    nidApp.hIcon  = hMainIcon;                        // handle of the Icon to be displayed, obtained from LoadIcon 
+    nidApp.hIcon  = LoadIcon(hInst, MAKEINTRESOURCE(IDI_APP_ICON));
     nidApp.uCallbackMessage = WM_USER_SHELLICON;
-    LoadString(hInstance, IDS_APPTOOLTIP, nidApp.szTip, MAX_LOADSTRING);
+    LoadString(hInstance, IDS_APPTOOLTIP, nidApp.szTip, sizeof(nidApp.szTip)/sizeof(nidApp.szTip[0]));
     Shell_NotifyIcon(NIM_ADD, &nidApp);
 
     return TRUE;
@@ -242,6 +240,8 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             break;
         case IDM_ENABLED:
             HookDll::Enable(HookDll::Disabled());
+            nidApp.hIcon = LoadIcon(hInst, MAKEINTRESOURCE(HookDll::Disabled() ? IDI_APP_ICON_DISABLED : IDI_APP_ICON));
+            Shell_NotifyIcon(NIM_MODIFY, &nidApp);
             break;
         case IDM_EXIT:
             Shell_NotifyIcon(NIM_DELETE, &nidApp);
