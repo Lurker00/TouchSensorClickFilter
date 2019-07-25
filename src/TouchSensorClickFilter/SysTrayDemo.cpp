@@ -34,10 +34,14 @@ public:
         if (hEventSource != NULL)
             ::DeregisterEventSource(hEventSource);
     }
-    void Report(const TCHAR* event, WORD wType = EVENTLOG_SUCCESS)
+    enum Events
+    {
+        eGeneric, eStart, eStop, eDaemonize, eAlreadyRunning
+    };
+    void Report(const TCHAR* event, Events eventId, WORD wType = EVENTLOG_SUCCESS)
     {
         if (hEventSource != NULL)
-            ReportEvent(hEventSource, wType, 0, 0, NULL, 1, 0, &event, NULL);
+            ReportEvent(hEventSource, wType, 0, eventId, NULL, 1, 0, &event, NULL);
     }
 private:
     HANDLE hEventSource;
@@ -59,7 +63,7 @@ int APIENTRY _tWinMain(HINSTANCE hInstance,
     // Only one instance is allowed:
     if (FindWindow(szWindowClass, szTitle) != NULL)
     {
-        Reporter.Report(_T("Already running, quit"), EVENTLOG_WARNING_TYPE);
+        Reporter.Report(_T("Already running, quit"), EventReporter::eAlreadyRunning, EVENTLOG_WARNING_TYPE);
         return 0;
     }
 
@@ -77,10 +81,10 @@ int APIENTRY _tWinMain(HINSTANCE hInstance,
         {
             CloseHandle(pi.hProcess);
             CloseHandle(pi.hThread);
-            Reporter.Report(_T("Daemonizing"));
+            Reporter.Report(_T("Daemonizing"), EventReporter::eDaemonize);
         }
         else
-            Reporter.Report(_T("Failed to daemonize, quit"), EVENTLOG_ERROR_TYPE);
+            Reporter.Report(_T("Failed to daemonize, quit"), EventReporter::eGeneric, EVENTLOG_ERROR_TYPE);
         return 0;
     }
 
@@ -89,13 +93,13 @@ int APIENTRY _tWinMain(HINSTANCE hInstance,
     // Perform application initialization:
     if (!InitInstance(hInstance, nCmdShow))
     {
-        Reporter.Report(_T("InitInstance failed, quit"), EVENTLOG_ERROR_TYPE);
+        Reporter.Report(_T("InitInstance failed, quit"), EventReporter::eGeneric, EVENTLOG_ERROR_TYPE);
         return 0;
     }
 
     HACCEL hAccelTable = LoadAccelerators(hInstance, MAKEINTRESOURCE(IDC_APP_CLASS));
 
-    Reporter.Report(_T("Started"));
+    Reporter.Report(_T("Started"), EventReporter::eStart);
 
     HookDll hook; // Install mouse hook
 
@@ -110,7 +114,7 @@ int APIENTRY _tWinMain(HINSTANCE hInstance,
         }
     }
 
-    Reporter.Report(_T("Stopped"));
+    Reporter.Report(_T("Stopped"), EventReporter::eStop);
 
     return (int)msg.wParam;
 }
