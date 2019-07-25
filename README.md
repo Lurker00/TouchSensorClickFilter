@@ -34,7 +34,7 @@ You can control app starts and stops using [Windows Event Viewer (Windows Logs->
 
 ## Credits
 
-I've derived [SysTrayDemo](https://www.codeproject.com/Articles/18783/Example-of-a-SysTray-App-in-Win32) example which is distributed under [CPOL](https://www.codeproject.com/info/cpol10.aspx) license. I have taken the icon from [clickfix](https://github.com/CemraJC/clickfix) project which is distributed under [GPLv3](http://www.gnu.org/licenses/) license. I believe I didn't violate either of them.
+I've derived [SysTrayDemo](https://www.codeproject.com/Articles/18783/Example-of-a-SysTray-App-in-Win32) example which is distributed under [CPOL](https://www.codeproject.com/info/cpol10.aspx) license.
 
 ## Copyright (c) 2019
 
@@ -42,4 +42,4 @@ I've derived [SysTrayDemo](https://www.codeproject.com/Articles/18783/Example-of
 
 ## History
 
-* 0.90 - first public release.
+* 0.91 - first public release.
