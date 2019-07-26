@@ -189,10 +189,17 @@ BOOL InitInstance(HINSTANCE hInstance, int /*nCmdShow*/)
     nidApp.uFlags = NIF_ICON | NIF_MESSAGE | NIF_TIP; // ORing of all the flags 
     nidApp.hIcon  = LoadIcon(hInst, MAKEINTRESOURCE(IDI_APP_ICON));
     nidApp.uCallbackMessage = WM_USER_SHELLICON;
-    LoadString(hInstance, IDS_APPTOOLTIP, nidApp.szTip, sizeof(nidApp.szTip)/sizeof(nidApp.szTip[0]));
+    LoadString(hInstance, IDS_APPTOOLTIP_ENABLED, nidApp.szTip, sizeof(nidApp.szTip)/sizeof(nidApp.szTip[0]));
     Shell_NotifyIcon(NIM_ADD, &nidApp);
 
     return TRUE;
+}
+
+static void SetState(HINSTANCE hInstance, NOTIFYICONDATA& nidApp, bool disabled)
+{
+    DestroyIcon(nidApp.hIcon);
+    nidApp.hIcon = LoadIcon(hInstance, MAKEINTRESOURCE(disabled ? IDI_APP_ICON_DISABLED : IDI_APP_ICON));
+    LoadString(hInstance, disabled ? IDS_APPTOOLTIP_DISABLED : IDS_APPTOOLTIP_ENABLED, nidApp.szTip, sizeof(nidApp.szTip) / sizeof(nidApp.szTip[0]));
 }
 
 //
@@ -240,7 +247,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             break;
         case IDM_ENABLED:
             HookDll::Enable(HookDll::Disabled());
-            nidApp.hIcon = LoadIcon(hInst, MAKEINTRESOURCE(HookDll::Disabled() ? IDI_APP_ICON_DISABLED : IDI_APP_ICON));
+            SetState(hInst, nidApp, HookDll::Disabled());
             Shell_NotifyIcon(NIM_MODIFY, &nidApp);
             break;
         case IDM_EXIT:

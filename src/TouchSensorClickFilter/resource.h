@@ -7,11 +7,12 @@
 #define IDS_APP_TITLE                   103
 #define IDD_ABOUTBOX                    103
 #define IDM_ABOUT                       104
-#define IDS_APPTOOLTIP                  104
-#define IDM_EXIT                        105
-#define IDI_APP_ICON                    107
-#define IDI_APP_ICON_DISABLED           108
-#define IDC_APP_CLASS                   109
+#define IDS_APPTOOLTIP_ENABLED          105
+#define IDS_APPTOOLTIP_DISABLED         106
+#define IDM_EXIT                        107
+#define IDI_APP_ICON                    108
+#define IDI_APP_ICON_DISABLED           109
+#define IDC_APP_CLASS                   110
 #define IDR_MAINFRAME                   128
 #define ID_S_                           32771
 #define ID_S_EXIT                       32772
