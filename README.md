@@ -32,6 +32,8 @@ To autostart as Administrator without UAC prompt, create a Scheduled Task with "
 
 You can control app starts and stops using [Windows Event Viewer (Windows Logs->Application)](https://en.wikipedia.org/wiki/Event_Viewer). In the stopping event it provides the statistics of the past session.
 
+You may provide a feedback in the [dedicated thread at Reddit](https://www.reddit.com/r/GPDPocket/comments/chmer5/one_mix_123_touch_sensor_misbehavior_the_solution/).
+
 ## Credits
 
 I've derived [SysTrayDemo](https://www.codeproject.com/Articles/18783/Example-of-a-SysTray-App-in-Win32) example which is distributed under [CPOL](https://www.codeproject.com/info/cpol10.aspx) license.
