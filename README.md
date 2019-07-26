@@ -1,5 +1,5 @@
 # TouchSensorClickFilter
-Filters out clicks produced by optical touch sensors
+Filters out (actually, disables) clicks produced by optical touch sensor
 
 ## The problem
 
