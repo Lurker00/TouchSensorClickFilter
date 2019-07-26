@@ -13,6 +13,7 @@
 #define IDI_APP_ICON                    108
 #define IDI_APP_ICON_DISABLED           109
 #define IDC_APP_CLASS                   110
+#define IDC_URL                         111
 #define IDR_MAINFRAME                   128
 #define ID_S_                           32771
 #define ID_S_EXIT                       32772
@@ -32,7 +33,7 @@
 #define _APS_NO_MFC                     1
 #define _APS_NEXT_RESOURCE_VALUE        129
 #define _APS_NEXT_COMMAND_VALUE         32780
-#define _APS_NEXT_CONTROL_VALUE         1000
+#define _APS_NEXT_CONTROL_VALUE         1001
 #define _APS_NEXT_SYMED_VALUE           110
 #endif
 #endif

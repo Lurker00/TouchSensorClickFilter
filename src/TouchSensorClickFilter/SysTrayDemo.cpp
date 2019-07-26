@@ -284,15 +284,30 @@ INT_PTR CALLBACK About(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
     switch (message)
     {
     case WM_INITDIALOG:
-        return (INT_PTR)TRUE;
+        return TRUE;
 
     case WM_COMMAND:
         if (LOWORD(wParam) == IDOK || LOWORD(wParam) == IDCANCEL)
         {
             EndDialog(hDlg, LOWORD(wParam));
-            return (INT_PTR)TRUE;
+            return TRUE;
+        }
+        if (LOWORD(wParam) == IDC_URL)
+        {
+            TCHAR text[256];
+            GetDlgItemText(hDlg, IDC_URL, text, sizeof(text) / sizeof(text[0]));
+            ShellExecute(NULL, _T("open"), text, NULL, NULL, SW_SHOW);
+            return TRUE;
+        }
+        break;
+    case WM_CTLCOLORSTATIC:
+        if ((HWND)lParam == GetDlgItem(hDlg, IDC_URL))
+        {
+            SetBkMode((HDC)wParam, TRANSPARENT);
+            SetTextColor((HDC)wParam, RGB(0, 0, 255));
+            return (INT_PTR)GetSysColorBrush(COLOR_BTNFACE);
         }
         break;
     }
-    return (INT_PTR)FALSE;
+    return FALSE;
 }

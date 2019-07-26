@@ -68,16 +68,16 @@ END
 // Dialog
 //
 
-IDD_ABOUTBOX DIALOGEX 22, 17, 230, 52
+IDD_ABOUTBOX DIALOGEX 22, 17, 211, 53
 STYLE DS_SETFONT | DS_MODALFRAME | DS_CENTER | WS_CAPTION | WS_SYSMENU
 CAPTION "About"
 FONT 8, "System", 0, 0, 0x0
 BEGIN
-    ICON            IDI_APP_ICON,IDC_MYICON,14,9,20,20
-    CTEXT           "TouchSensorClickFilter Version 0.92",IDC_STATIC,49,10,119,8,SS_NOPREFIX
-    CTEXT           "Copyright (C) 2019 Lurker",IDC_STATIC,49,20,119,8
-    DEFPUSHBUTTON   "OK",IDOK,195,10,30,11,WS_GROUP
-    CTEXT           "https://github.com/Lurker00/TouchSensorClickFilter",IDC_STATIC,4,31,225,8
+    ICON            IDI_APP_ICON,IDC_MYICON,10,11,20,20,SS_CENTERIMAGE
+    CTEXT           "TouchSensorClickFilter v.0.92",IDC_STATIC,44,9,119,8,SS_NOPREFIX
+    CTEXT           "Copyright © 2019 Lurker",IDC_STATIC,44,19,119,8
+    DEFPUSHBUTTON   "OK",IDOK,171,13,30,11,WS_GROUP
+    CTEXT           "https://github.com/Lurker00/TouchSensorClickFilter",IDC_URL,5,36,202,8,SS_NOTIFY
 END
 
 
