@@ -26,6 +26,8 @@ The filter can be temporarily disabled, or app can be closed from pop-up menu. I
 
 It is distributed as an executable file. No installation is required. Download a zip archive from [Releases section](https://github.com/Lurker00/TouchSensorClickFilter/releases), unzip, put in a suitable directory, and run. If you need to launch it automatically, use Windows means for this purpose.
 
+You may need to download and install [Microsoft Visual C++ 2017 Redistributable for x64](https://support.microsoft.com/en-us/help/2977003/the-latest-supported-visual-c-downloads).
+
 **Note:** The filter works only for the current user under which it was launched. It will not work for elevated apps (started as Administrator), if it wasn't launched as Administrator.
 
 To autostart as Administrator without UAC prompt, create a Scheduled Task with "Run with highest privileges", and then a shortcut for it. A good example is [here](https://www.tenforums.com/tutorials/57690-create-elevated-shortcut-without-uac-prompt-windows-10-a.html). To prevent the process from being killed by Task Scheduler, use "demonize" (without quotes) as the argument to the program.
