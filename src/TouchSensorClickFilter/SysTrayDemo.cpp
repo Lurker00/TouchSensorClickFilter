@@ -80,7 +80,7 @@ int APIENTRY _tWinMain(HINSTANCE hInstance,
         return 0;
     }
 
-    static const TCHAR const szDetached[] = _T("detached");
+    static const TCHAR szDetached[] = _T("detached");
     if (lpCmdLine[0] == 0 || _tcsstr(lpCmdLine, _T("daemonize")) != NULL)
     { // "Fork" itself and quit
         TCHAR const* pgmptr =
