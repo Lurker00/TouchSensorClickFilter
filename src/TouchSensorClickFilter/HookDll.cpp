@@ -5,7 +5,6 @@
 #include "HookDll.h"
 
 #include <stdio.h>
-#include <mutex>
 
 class Logger {
 public:
@@ -65,6 +64,29 @@ private:
     bool IsRDP      = false;
 };
 
+class CriticalSection
+{
+public:
+    CriticalSection()  { ::InitializeCriticalSection(&CS); }
+    ~CriticalSection() { ::DeleteCriticalSection(&CS); }
+
+    void Enter() { ::EnterCriticalSection(&CS); }
+    void Leave() { ::LeaveCriticalSection(&CS); }
+
+private:
+    CRITICAL_SECTION CS;
+
+public:
+    class AutoLock
+    {
+    public:
+        AutoLock(CriticalSection& cs) : CS(cs) { CS.Enter(); }
+        ~AutoLock() { CS.Leave(); }
+    protected:
+        CriticalSection& CS;
+    };
+};
+
 class HookDllImpl {
     /******************************************
         In no a test I was able to click faster than in 50 ms.
@@ -109,7 +131,7 @@ private:
     MSLLHOOKSTRUCT SavedEvent = { 0, };
     unsigned LButtonDownCounter = 0;
     bool LButtonDown = false;
-    std::mutex Mutex;
+    CriticalSection Mutex;
 
     RDPDetector Remote;
     unsigned ClicksEliminated = 0;
@@ -145,15 +167,8 @@ static LRESULT CALLBACK LowLevelMouseProc(int nCode, WPARAM wParam, LPARAM lPara
     if (msllhs.flags != 0) // Injected event, don't process
         return ::CallNextHookEx(hHook, nCode, wParam, lParam);
 
-    try {
-        if (Instance->LowLevelMouseProc(wParam, msllhs))
-            return 1; // Stop further processing
-    }
-    catch (const std::exception& err) {
-        // Lock from the same thread? It happens when several WM_MOUSEMOVE come while processing WM_LBUTTONUP
-        Instance->Log.Log("wParam=0x%016llX flags=0x%08X dwExtraInfo=%016llX (%4d,%4d) time=%u -> %s"
-            , wParam, msllhs.flags, msllhs.dwExtraInfo, msllhs.pt.x, msllhs.pt.y, msllhs.time, err.what());
-    }
+    if (Instance->LowLevelMouseProc(wParam, msllhs))
+        return 1; // Stop further processing
 
     return ::CallNextHookEx(hHook, nCode, wParam, lParam);
 }
@@ -163,13 +178,7 @@ static void CALLBACK TimerProc(void* /*lpParametar*/, BOOLEAN /*TimerOrWaitFired
     if (Instance == nullptr)
         return; // Should never happen!
 
-    try {
-        Instance->TimerProc();
-    }
-    catch (const std::exception& err) {
-        // Lock from the same thread?
-        Instance->Log.Log("%s", err.what());
-    }
+    Instance->TimerProc();
 }
 
 HookDllImpl::HookDllImpl() {
@@ -195,7 +204,7 @@ static bool TooClose(const POINT& p1, const POINT& p2)
 
 bool HookDllImpl::LowLevelMouseProc(WPARAM wParam, const MSLLHOOKSTRUCT& msllhs)
 {
-    std::lock_guard<std::mutex> lock(Mutex);
+    CriticalSection::AutoLock lock(Mutex);
 
     if (SavedEvent.time == 0 && Remote.Detected())
         return false; // Stop if idle and in RDP
@@ -317,7 +326,7 @@ bool HookDllImpl::LowLevelMouseProc(WPARAM wParam, const MSLLHOOKSTRUCT& msllhs)
 
 void HookDllImpl::TimerProc()
 {
-    std::lock_guard<std::mutex> lock(Mutex);
+    CriticalSection::AutoLock lock(Mutex);
     if (!Timer) return; // Too late!
 
     Log.Log("Button down by timer");
