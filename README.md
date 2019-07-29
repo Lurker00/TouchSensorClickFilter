@@ -30,7 +30,7 @@ You may need to download and install [Microsoft Visual C++ 2017 Redistributable 
 
 **Note:** The filter works only for the current user under which it was launched. It will not work for elevated apps (started as Administrator), if it wasn't launched as Administrator.
 
-To autostart as Administrator without UAC prompt, create a Scheduled Task with "Run with highest privileges", and then a shortcut for it. A good example is [here](https://www.tenforums.com/tutorials/57690-create-elevated-shortcut-without-uac-prompt-windows-10-a.html). To prevent the process from being killed by Task Scheduler, use "demonize" (without quotes) as the argument to the program.
+To autostart as Administrator without UAC prompt, create a Scheduled Task with "Run with highest privileges", and then a shortcut for it. A good example is [here](https://www.tenforums.com/tutorials/57690-create-elevated-shortcut-without-uac-prompt-windows-10-a.html). To prevent the process from being killed by Task Scheduler, use "daemonize" (without quotes) as the argument to the program.
 
 You can control app starts and stops using [Windows Event Viewer (Windows Logs->Application)](https://en.wikipedia.org/wiki/Event_Viewer). In the stopping event it provides the statistics of the past session.
 
