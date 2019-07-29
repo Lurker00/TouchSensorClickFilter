@@ -46,4 +46,4 @@ I've derived [SysTrayDemo](https://www.codeproject.com/Articles/18783/Example-of
 
 ## History
 
-* 0.91 - first public release.
+* [0.91](https://github.com/Lurker00/TouchSensorClickFilter/releases/tag/v0.91) - first public release.
