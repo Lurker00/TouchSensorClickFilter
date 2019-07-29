@@ -136,6 +136,7 @@ BEGIN
     IDS_APPTOOLTIP_ENABLED  "TSCF enabled"
     IDS_APPTOOLTIP_DISABLED "TSCF disabled"
     IDC_APP_CLASS           "TouchSensorClickFilter"
+    IDS_UNKNOWN_CMDLINE     "Unrecognized command line:\n"
 END
 
 #endif    // English (United States) resources

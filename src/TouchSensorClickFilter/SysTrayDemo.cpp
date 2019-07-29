@@ -6,6 +6,8 @@
 
 #include "HookDll.h"
 
+#include <vector>
+
 #define MAX_LOADSTRING 100
 #define	WM_USER_SHELLICON WM_USER + 1
 
@@ -78,17 +80,24 @@ int APIENTRY _tWinMain(HINSTANCE hInstance,
         return 0;
     }
 
-    if (_tcsstr(lpCmdLine, _T("daemonize")) != NULL)
+    static const TCHAR const szDetached[] = _T("detached");
+    if (lpCmdLine[0] == 0 || _tcsstr(lpCmdLine, _T("daemonize")) != NULL)
     { // "Fork" itself and quit
-        STARTUPINFO si = { sizeof(si) };
-        PROCESS_INFORMATION pi;
         TCHAR const* pgmptr =
 #ifdef _UNICODE
             _wpgmptr;
 #else
             _pgmptr;
 #endif
-        if (CreateProcess(pgmptr, NULL, NULL, NULL, FALSE, 0, NULL, NULL, &si, &pi))
+        const size_t pathLength = _tcslen(pgmptr);
+        std::vector<TCHAR> cmdLine(pathLength + 1 + sizeof(szDetached)/sizeof(szDetached[0]));
+        memcpy(cmdLine.data(), pgmptr, pathLength * sizeof(lpCmdLine[0]));
+        cmdLine[pathLength] = _T(' ');
+        memcpy(cmdLine.data() + pathLength + 1, szDetached, sizeof(szDetached));
+
+        STARTUPINFO si = { sizeof(si) };
+        PROCESS_INFORMATION pi;
+        if (CreateProcess(NULL, cmdLine.data(), NULL, NULL, FALSE, 0, NULL, NULL, &si, &pi))
         {
             CloseHandle(pi.hProcess);
             CloseHandle(pi.hThread);
@@ -97,6 +106,20 @@ int APIENTRY _tWinMain(HINSTANCE hInstance,
         else
             reporter.Report(_T("Failed to daemonize, quit"), EventReporter::eGeneric, EVENTLOG_ERROR_TYPE);
         return 0;
+    }
+    else if (_tcsstr(lpCmdLine, szDetached) != NULL)
+    {
+        // Continue working
+    }
+    else
+    {
+        TCHAR szText[MAX_LOADSTRING] = { 0, };
+        LoadString(hInstance, IDS_UNKNOWN_CMDLINE, szText, MAX_LOADSTRING);
+        std::vector<TCHAR> szMessage(_tcslen(szText) + _tcslen(lpCmdLine) + 1);
+        _tcscpy(szMessage.data(), szText);
+        _tcscat(szMessage.data(), lpCmdLine);
+        MessageBox(NULL, szMessage.data(), szTitle, MB_OK | MB_ICONSTOP);
+        return 1;
     }
 
     MyRegisterClass(hInstance);
