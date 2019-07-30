@@ -29,8 +29,6 @@ public:
     unsigned Clicks() const { return ClicksEliminated; }
     unsigned Moves()  const { return MovesEliminated;  }
 
-    Logger Log;
-
 private:
     void StopTimer()
     {
@@ -55,9 +53,11 @@ private:
     MSLLHOOKSTRUCT SavedEvent = { 0, };
     unsigned LButtonDownCounter = 0;
     bool LButtonDown = false;
-    CriticalSection Mutex;
 
-    RDPDetector Remote;
+    CriticalSection Mutex;
+    Logger          Log;
+    RDPDetector     Remote;
+
     unsigned ClicksEliminated = 0;
     unsigned MovesEliminated  = 0;
 };
@@ -100,7 +100,7 @@ static LRESULT CALLBACK LowLevelMouseProc(int nCode, WPARAM wParam, LPARAM lPara
 }
 
 // Windows API callback
-static void CALLBACK TimerProc(void* /*lpParametar*/, BOOLEAN /*TimerOrWaitFired*/)
+static void CALLBACK WaitOrTimerCallback(PVOID /*lpParameter*/, BOOLEAN /*TimerOrWaitFired*/)
 {
     if (Instance == nullptr)
         return; // Should never happen!
@@ -147,7 +147,7 @@ bool HookDllImpl::LowLevelMouseProc(WPARAM wParam, const MSLLHOOKSTRUCT& msllhs)
         if (LButtonDownCounter == 0 && !LButtonDown)
         {
             SavedEvent = msllhs;
-            ::CreateTimerQueueTimer(&Timer, NULL, ::TimerProc, this, TOO_FAST_CLICK, 0, WT_EXECUTEINTIMERTHREAD);
+            ::CreateTimerQueueTimer(&Timer, NULL, ::WaitOrTimerCallback, this, TOO_FAST_CLICK, 0, WT_EXECUTEINTIMERTHREAD);
             Log.Log("Timer started");
         }
         else
