@@ -18,7 +18,7 @@ NOTIFYICONDATA nidApp;
 
 // Forward declarations of functions included in this code module:
 ATOM MyRegisterClass(HINSTANCE hInstance, const TCHAR* szWindowClass);
-BOOL InitInstance(HINSTANCE, const TCHAR* szWindowClass, const TCHAR* szTitle);
+BOOL InitInstance(HINSTANCE hInstance, const TCHAR* szWindowClass, const TCHAR* szTitle);
 
 // Windows API callbacks
 LRESULT CALLBACK WndProc(HWND, UINT, WPARAM, LPARAM);
@@ -43,7 +43,7 @@ int APIENTRY _tWinMain(HINSTANCE hInstance,
     TCHAR szTitle[MAX_LOADSTRING];       // The title bar text
     LoadString(hInstance, IDS_APP_TITLE, szTitle, MAX_LOADSTRING);
 
-    TCHAR szWindowClass[MAX_LOADSTRING]; // the main window class name
+    TCHAR szWindowClass[MAX_LOADSTRING]; // The main window class name
     LoadString(hInstance, IDC_APP_CLASS, szWindowClass, MAX_LOADSTRING);
 
     EventReporter reporter(szWindowClass);
@@ -210,36 +210,31 @@ static void SetState(HINSTANCE hInstance, NOTIFYICONDATA& nidApp, bool disabled)
 //  WM_PAINT	- Paint the main window
 //  WM_DESTROY	- post a quit message and return
 //
-//
 LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
-    int wmId, wmEvent;
-    POINT lpClickPoint;
-
     switch (message)
     {
     case WM_USER_SHELLICON:
-        // systray msg callback 
+        // Systray msg callback 
         switch (LOWORD(lParam))
         {
         case WM_LBUTTONDOWN:
         case WM_RBUTTONDOWN:
-            GetCursorPos(&lpClickPoint);
+            POINT clickPoint;
+            GetCursorPos(&clickPoint);
             HMENU hPopMenu = GetSubMenu(GetMenu(hWnd), 0);
             if (HookDll::Disabled())
                 ::CheckMenuItem(hPopMenu, IDM_ENABLED, MF_UNCHECKED | MF_BYCOMMAND);
             else
                 ::CheckMenuItem(hPopMenu, IDM_ENABLED, MF_CHECKED | MF_BYCOMMAND);
             SetForegroundWindow(hWnd);
-            TrackPopupMenu(hPopMenu, TPM_LEFTALIGN | TPM_LEFTBUTTON | TPM_BOTTOMALIGN, lpClickPoint.x, lpClickPoint.y, 0, hWnd, NULL);
+            TrackPopupMenu(hPopMenu, TPM_LEFTALIGN | TPM_LEFTBUTTON | TPM_BOTTOMALIGN, clickPoint.x, clickPoint.y, 0, hWnd, NULL);
             return TRUE;
         }
         break;
     case WM_COMMAND:
-        wmId    = LOWORD(wParam);
-        wmEvent = HIWORD(wParam);
         // Parse the menu selections:
-        switch (wmId)
+        switch (LOWORD(wParam))
         {
         case IDM_ABOUT:
             DialogBox(hInst, MAKEINTRESOURCE(IDD_ABOUTBOX), hWnd, About);
@@ -276,7 +271,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     return 0;
 }
 
-// Message handler for about box.
+// Message handler for About box.
 INT_PTR CALLBACK About(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 {
     UNREFERENCED_PARAMETER(lParam);

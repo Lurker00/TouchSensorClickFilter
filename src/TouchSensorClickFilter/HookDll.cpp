@@ -9,10 +9,10 @@
 #include "helpers/CriticalSection.h"
 
 class HookDllImpl {
-    /******************************************
+    /********************************************************************
         In no a test I was able to click faster than in 50 ms.
         In all the tests, false clicks by touch sensor were under 16 ms.
-    *******************************************/
+    *********************************************************************/
     static const unsigned TOO_FAST_CLICK = 50; // ms
 public:
     HookDllImpl();
