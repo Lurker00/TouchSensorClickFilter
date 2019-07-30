@@ -6,11 +6,8 @@
 
 #include "HookDll.h"
 
-#if defined(min)
-#   undef min
-#endif
-
-#include <algorithm>
+#include "helpers/EventReporter.h"
+#include "helpers/SimpleBuffer.h"
 
 #define MAX_LOADSTRING 100
 #define	WM_USER_SHELLICON WM_USER + 1
@@ -28,70 +25,11 @@ BOOL             InitInstance(HINSTANCE, int);
 LRESULT CALLBACK WndProc(HWND, UINT, WPARAM, LPARAM);
 INT_PTR CALLBACK About(HWND, UINT, WPARAM, LPARAM);
 
-class EventReporter
-{
-public:
-    EventReporter(const TCHAR* eventSource)
-    {
-        hEventSource = RegisterEventSource(NULL, eventSource);
-        pInstance = this;
-    }
-    ~EventReporter()
-    {
-        if (hEventSource != NULL)
-            ::DeregisterEventSource(hEventSource);
-        pInstance = nullptr;
-    }
-
-    enum Events { eGeneric, eStart, eStop, eDaemonize, eAlreadyRunning };
-    void Report(const TCHAR* event, Events eventId, WORD wType = EVENTLOG_SUCCESS)
-    {
-        if (hEventSource != NULL)
-            ReportEvent(hEventSource, wType, 0, eventId, NULL, 1, 0, &event, NULL);
-    }
-
-    static EventReporter& Instance() { return *pInstance; }
-private:
-    HANDLE hEventSource;
-    static EventReporter* pInstance;
-};
-EventReporter* EventReporter::pInstance = nullptr;
-
-template<typename T>
-class SimpleBuffer
-{
-public:
-    explicit SimpleBuffer(size_t size)
-    {
-        Buffer = new T[size];
-        if (Buffer) Size = size;
-    }
-    ~SimpleBuffer() { delete[] Buffer; }
-
-    const T* Data() const { return Buffer; }
-    T* Data() { return Buffer; }
-
-    void Append(const T* data, size_t count)
-    {
-        size_t to_add = std::min(Size - Pos, count);
-        if (to_add)
-        {
-            memcpy(Buffer + Pos, data, to_add * sizeof(T));
-            Pos += to_add;
-        }
-    }
-    void Append(const T& c) { Append(&c, 1); }
-
-private:
-    size_t Size = 0;
-    size_t Pos  = 0;
-    T* Buffer   = nullptr;
-};
 
 static void StopEvent(const TCHAR* reason)
 {
     TCHAR szBuffer[128];
-    _stprintf(szBuffer, _T("%s. %u clicks and %u moves eliminated."), reason, HookDll::Clicks(), HookDll::Moves());
+    _sntprintf(szBuffer, sizeof(szBuffer)/sizeof(szBuffer[0]), _T("%s. %u clicks and %u moves eliminated."), reason, HookDll::Clicks(), HookDll::Moves());
     EventReporter::Instance().Report(szBuffer, EventReporter::eStop);
 }
 

@@ -4,88 +4,9 @@
 #include "stdafx.h"
 #include "HookDll.h"
 
-#include <stdio.h>
-
-class Logger {
-public:
-    Logger()
-    {
-#if _DEBUG
-        TCHAR szPath[MAX_PATH + 4];
-        if (GetModuleFileName(NULL, szPath, MAX_PATH) > 0)
-        {
-            _tcscat(szPath, _T(".log"));
-            fLog = _tfopen(szPath, _T("wt"));
-        }
-#endif
-    }
-
-    ~Logger()
-    {
-#if _DEBUG
-        if (fLog)
-        {
-            Log("Stopped");
-            fclose(fLog);
-        }
-#endif
-    }
-
-    template<typename ...Args>
-    void Log(Args ... args)
-    {
-#if _DEBUG
-        if (!fLog) return;
-        fprintf(fLog, "[%10u] ", ::GetTickCount());
-        fprintf(fLog, args...);
-        fprintf(fLog, "\n");
-        fflush(fLog);
-#endif
-    }
-
-private:
-#if _DEBUG
-    FILE* fLog = NULL;
-#endif
-};
-
-class RDPDetector {
-public:
-    bool Detected() {
-#if !_DEBUG
-        DWORD now = ::GetTickCount();
-        if (now < LastCheck || now - LastCheck > 5000)
-            IsRDP = ::GetSystemMetrics(SM_REMOTESESSION);
-#endif
-        return IsRDP;
-    }
-private:
-    DWORD LastCheck = 0;
-    bool IsRDP      = false;
-};
-
-class CriticalSection
-{
-public:
-    CriticalSection()  { ::InitializeCriticalSection(&CS); }
-    ~CriticalSection() { ::DeleteCriticalSection(&CS); }
-
-    void Enter() { ::EnterCriticalSection(&CS); }
-    void Leave() { ::LeaveCriticalSection(&CS); }
-
-private:
-    CRITICAL_SECTION CS;
-
-public:
-    class AutoLock
-    {
-    public:
-        AutoLock(CriticalSection& cs) : CS(cs) { CS.Enter(); }
-        ~AutoLock() { CS.Leave(); }
-    protected:
-        CriticalSection& CS;
-    };
-};
+#include "helpers/Logger.h"
+#include "helpers/RDPDetector.h"
+#include "helpers/CriticalSection.h"
 
 class HookDllImpl {
     /******************************************
@@ -99,12 +20,15 @@ public:
 
     bool LowLevelMouseProc(WPARAM wParam, const MSLLHOOKSTRUCT& msllhs);
     void TimerProc();
+
     bool Disabled() { return Disable || Remote.Detected(); }
     void Enable(bool enable) { Disable = !enable; }
+
     HHOOK hHook() const { return Hook; }
 
     unsigned Clicks() const { return ClicksEliminated; }
     unsigned Moves()  const { return MovesEliminated;  }
+
     Logger Log;
 
 private:
@@ -142,12 +66,14 @@ static HookDllImpl* Instance = nullptr;
 
 static bool MyEvent(WPARAM wParam)
 {
-    static WPARAM events[] = { WM_MOUSEMOVE, WM_LBUTTONDOWN, WM_LBUTTONUP };
+    // Only the events that HookDllImplHookDllImpl::LowLevelMouseProc expects
+    static const WPARAM events[] = { WM_MOUSEMOVE, WM_LBUTTONDOWN, WM_LBUTTONUP };
     for (auto e : events)
         if (e == wParam) return true;
     return false;
 }
 
+// Windows API callback
 static LRESULT CALLBACK LowLevelMouseProc(int nCode, WPARAM wParam, LPARAM lParam)
 {
     if (Instance == nullptr)
@@ -173,6 +99,7 @@ static LRESULT CALLBACK LowLevelMouseProc(int nCode, WPARAM wParam, LPARAM lPara
     return ::CallNextHookEx(hHook, nCode, wParam, lParam);
 }
 
+// Windows API callback
 static void CALLBACK TimerProc(void* /*lpParametar*/, BOOLEAN /*TimerOrWaitFired*/)
 {
     if (Instance == nullptr)
@@ -183,7 +110,7 @@ static void CALLBACK TimerProc(void* /*lpParametar*/, BOOLEAN /*TimerOrWaitFired
 
 HookDllImpl::HookDllImpl() {
     HINSTANCE hSelf = NULL;
-    ::GetModuleHandleEx(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS | GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT, (wchar_t *)::LowLevelMouseProc, &hSelf);
+    ::GetModuleHandleEx(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS | GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT, (TCHAR *)::LowLevelMouseProc, &hSelf);
     Hook = ::SetWindowsHookEx(WH_MOUSE_LL, ::LowLevelMouseProc, hSelf, 0);
 }
 

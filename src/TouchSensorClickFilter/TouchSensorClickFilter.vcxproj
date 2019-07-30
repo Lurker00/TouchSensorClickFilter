@@ -160,6 +160,11 @@
     <ClCompile Include="SysTrayDemo.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="helpers\CriticalSection.h" />
+    <ClInclude Include="helpers\EventReporter.h" />
+    <ClInclude Include="helpers\Logger.h" />
+    <ClInclude Include="helpers\RDPDetector.h" />
+    <ClInclude Include="helpers\SimpleBuffer.h" />
     <ClInclude Include="HookDll.h" />
     <ClInclude Include="Resource.h" />
     <ClInclude Include="stdafx.h" />
