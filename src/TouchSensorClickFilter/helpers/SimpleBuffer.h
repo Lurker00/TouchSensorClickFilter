@@ -23,12 +23,8 @@ public:
 
     void Append(const T* data, size_t count)
     {
-        size_t to_add = std::min(Size - Pos, count);
-        if (to_add)
-        {
-            memcpy(Buffer + Pos, data, to_add * sizeof(T));
-            Pos += to_add;
-        }
+        for (size_t to_add = std::min(Size - Pos, count); to_add > 0; to_add--, Pos++, data++)
+            Buffer[Pos] = *data;
     }
     void Append(const T& c) { Append(&c, 1); }
 
