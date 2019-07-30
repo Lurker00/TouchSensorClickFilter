@@ -6,7 +6,11 @@
 
 #include "HookDll.h"
 
-#include <vector>
+#if defined(min)
+#   undef min
+#endif
+
+#include <algorithm>
 
 #define MAX_LOADSTRING 100
 #define	WM_USER_SHELLICON WM_USER + 1
@@ -53,6 +57,37 @@ private:
 };
 EventReporter* EventReporter::pInstance = nullptr;
 
+template<typename T>
+class SimpleBuffer
+{
+public:
+    explicit SimpleBuffer(size_t size)
+    {
+        Buffer = new T[size];
+        if (Buffer) Size = size;
+    }
+    ~SimpleBuffer() { delete[] Buffer; }
+
+    const T* Data() const { return Buffer; }
+    T* Data() { return Buffer; }
+
+    void Append(const T* data, size_t count)
+    {
+        size_t to_add = std::min(Size - Pos, count);
+        if (to_add)
+        {
+            memcpy(Buffer + Pos, data, to_add * sizeof(T));
+            Pos += to_add;
+        }
+    }
+    void Append(const T& c) { Append(&c, 1); }
+
+private:
+    size_t Size = 0;
+    size_t Pos  = 0;
+    T* Buffer   = nullptr;
+};
+
 static void StopEvent(const TCHAR* reason)
 {
     TCHAR szBuffer[128];
@@ -90,14 +125,14 @@ int APIENTRY _tWinMain(HINSTANCE hInstance,
             _pgmptr;
 #endif
         const size_t pathLength = _tcslen(pgmptr);
-        std::vector<TCHAR> cmdLine(pathLength + 1 + sizeof(szDetached)/sizeof(szDetached[0]));
-        memcpy(cmdLine.data(), pgmptr, pathLength * sizeof(lpCmdLine[0]));
-        cmdLine[pathLength] = _T(' ');
-        memcpy(cmdLine.data() + pathLength + 1, szDetached, sizeof(szDetached));
+        SimpleBuffer<TCHAR> cmdLine(pathLength + 1 + sizeof(szDetached) / sizeof(szDetached[0]));
+        cmdLine.Append(pgmptr, pathLength);
+        cmdLine.Append(_T(' '));
+        cmdLine.Append(szDetached, sizeof(szDetached) / sizeof(szDetached[0]));
 
         STARTUPINFO si = { sizeof(si) };
         PROCESS_INFORMATION pi;
-        if (CreateProcess(NULL, cmdLine.data(), NULL, NULL, FALSE, 0, NULL, NULL, &si, &pi))
+        if (CreateProcess(NULL, cmdLine.Data(), NULL, NULL, FALSE, 0, NULL, NULL, &si, &pi))
         {
             CloseHandle(pi.hProcess);
             CloseHandle(pi.hThread);
@@ -115,10 +150,11 @@ int APIENTRY _tWinMain(HINSTANCE hInstance,
     {
         TCHAR szText[MAX_LOADSTRING] = { 0, };
         LoadString(hInstance, IDS_UNKNOWN_CMDLINE, szText, MAX_LOADSTRING);
-        std::vector<TCHAR> szMessage(_tcslen(szText) + _tcslen(lpCmdLine) + 1);
-        _tcscpy(szMessage.data(), szText);
-        _tcscat(szMessage.data(), lpCmdLine);
-        MessageBox(NULL, szMessage.data(), szTitle, MB_OK | MB_ICONSTOP);
+        SimpleBuffer<TCHAR> szMessage(_tcslen(szText) + _tcslen(lpCmdLine) + 1);
+        szMessage.Append(szText, _tcslen(szText));
+        szMessage.Append(lpCmdLine, _tcslen(lpCmdLine));
+        szMessage.Append(_T('\0'));
+        MessageBox(NULL, szMessage.Data(), szTitle, MB_OK | MB_ICONSTOP);
         return 1;
     }
 
