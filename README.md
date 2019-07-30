@@ -26,13 +26,11 @@ The filter can be temporarily disabled, or app can be closed from pop-up menu. I
 
 It is distributed as an executable file. No installation is required. Download a zip archive from [Releases section](https://github.com/Lurker00/TouchSensorClickFilter/releases), unzip, put in a suitable directory, and run. If you need to launch it automatically, use Windows means for this purpose.
 
-You may need to download and install [Microsoft Visual C++ 2017 Redistributable for x64](https://support.microsoft.com/en-us/help/2977003/the-latest-supported-visual-c-downloads).
-
 **Note:** The filter works only for the current user under which it was launched. It will not work for elevated apps (started as Administrator), if it wasn't launched as Administrator.
 
-To autostart as Administrator without UAC prompt, create a Scheduled Task with "Run with highest privileges", and then a shortcut for it. A good example is [here](https://www.tenforums.com/tutorials/57690-create-elevated-shortcut-without-uac-prompt-windows-10-a.html). To prevent the process from being killed by Task Scheduler, use "daemonize" (without quotes) as the argument to the program.
+To autostart as Administrator without UAC prompt, create a Scheduled Task with "Run with highest privileges", and then a shortcut for it, or add "At log on" trigger. A good example is [here](https://www.tenforums.com/tutorials/57690-create-elevated-shortcut-without-uac-prompt-windows-10-a.html).
 
-You can control app starts and stops using [Windows Event Viewer (Windows Logs->Application)](https://en.wikipedia.org/wiki/Event_Viewer). In the stopping event it provides the statistics of the past session.
+You can check app starts and stops using [Windows Event Viewer (Windows Logs->Application)](https://en.wikipedia.org/wiki/Event_Viewer). In the stopping event it provides the statistics of the past session.
 
 You may provide a feedback in the [dedicated thread at Reddit](https://www.reddit.com/r/GPDPocket/comments/chmer5/one_mix_123_touch_sensor_misbehavior_the_solution/).
 
@@ -46,4 +44,5 @@ I've derived [SysTrayDemo](https://www.codeproject.com/Articles/18783/Example-of
 
 ## History
 
+* [0.92](https://github.com/Lurker00/TouchSensorClickFilter/releases/tag/v0.92) - rather cosmetic improvements to simplify use.
 * [0.91](https://github.com/Lurker00/TouchSensorClickFilter/releases/tag/v0.91) - first public release.
