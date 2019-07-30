@@ -13,15 +13,14 @@
 #define	WM_USER_SHELLICON WM_USER + 1
 
 // Global Variables:
-HINSTANCE hInst;                             // current instance
+HINSTANCE      hInst;
 NOTIFYICONDATA nidApp;
-TCHAR szTitle[MAX_LOADSTRING];               // The title bar text
-TCHAR szWindowClass[MAX_LOADSTRING];         // the main window class name
-TCHAR szApplicationToolTip[MAX_LOADSTRING];  // the systray icon tooltip
 
 // Forward declarations of functions included in this code module:
-ATOM             MyRegisterClass(HINSTANCE hInstance);
-BOOL             InitInstance(HINSTANCE, int);
+ATOM MyRegisterClass(HINSTANCE hInstance, const TCHAR* szWindowClass);
+BOOL InitInstance(HINSTANCE, const TCHAR* szWindowClass, const TCHAR* szTitle);
+
+// Windows API callbacks
 LRESULT CALLBACK WndProc(HWND, UINT, WPARAM, LPARAM);
 INT_PTR CALLBACK About(HWND, UINT, WPARAM, LPARAM);
 
@@ -39,9 +38,12 @@ int APIENTRY _tWinMain(HINSTANCE hInstance,
                        int       nCmdShow)
 {
     UNREFERENCED_PARAMETER(hPrevInstance);
+    UNREFERENCED_PARAMETER(nCmdShow);
 
-    // Initialize global strings
+    TCHAR szTitle[MAX_LOADSTRING];       // The title bar text
     LoadString(hInstance, IDS_APP_TITLE, szTitle, MAX_LOADSTRING);
+
+    TCHAR szWindowClass[MAX_LOADSTRING]; // the main window class name
     LoadString(hInstance, IDC_APP_CLASS, szWindowClass, MAX_LOADSTRING);
 
     EventReporter reporter(szWindowClass);
@@ -96,10 +98,10 @@ int APIENTRY _tWinMain(HINSTANCE hInstance,
         return 1;
     }
 
-    MyRegisterClass(hInstance);
+    MyRegisterClass(hInstance, szWindowClass);
 
     // Perform application initialization:
-    if (!InitInstance(hInstance, nCmdShow))
+    if (!InitInstance(hInstance, szWindowClass, szTitle))
     {
         reporter.Report(_T("InitInstance failed, quit"), EventReporter::eGeneric, EVENTLOG_ERROR_TYPE);
         return 0;
@@ -140,7 +142,7 @@ int APIENTRY _tWinMain(HINSTANCE hInstance,
 //    so that the application will get 'well formed' small icons associated
 //    with it.
 //
-ATOM MyRegisterClass(HINSTANCE hInstance)
+ATOM MyRegisterClass(HINSTANCE hInstance, const TCHAR* szWindowClass)
 {
     WNDCLASSEX wcex;
 
@@ -171,7 +173,7 @@ ATOM MyRegisterClass(HINSTANCE hInstance)
 //        In this function, we save the instance handle in a global variable and
 //        create and display the main program window.
 //
-BOOL InitInstance(HINSTANCE hInstance, int /*nCmdShow*/)
+BOOL InitInstance(HINSTANCE hInstance, const TCHAR* szWindowClass, const TCHAR* szTitle)
 {
     hInst = hInstance; // Store instance handle in our global variable
 
