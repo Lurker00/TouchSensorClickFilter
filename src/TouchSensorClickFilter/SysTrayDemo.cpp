@@ -173,6 +173,7 @@ ATOM MyRegisterClass(HINSTANCE hInstance, const TCHAR* szWindowClass)
 //        In this function, we save the instance handle in a global variable and
 //        create and display the main program window.
 //
+#define IDI_APP_TRAY_ICON_ID 108 // Don't change its value!
 BOOL InitInstance(HINSTANCE hInstance, const TCHAR* szWindowClass, const TCHAR* szTitle)
 {
     hInst = hInstance; // Store instance handle in our global variable
@@ -184,7 +185,7 @@ BOOL InitInstance(HINSTANCE hInstance, const TCHAR* szWindowClass, const TCHAR* 
 
     nidApp.cbSize = sizeof(NOTIFYICONDATA);           // sizeof the struct in bytes 
     nidApp.hWnd   = hWnd;                             // handle of the window which will process this app. messages 
-    nidApp.uID    = IDI_APP_ICON;                     // ID of the icon that will appear in the system tray 
+    nidApp.uID    = IDI_APP_TRAY_ICON_ID;             // ID of the icon that will appear in the system tray 
     nidApp.uFlags = NIF_ICON | NIF_MESSAGE | NIF_TIP; // ORing of all the flags 
     nidApp.hIcon  = LoadIcon(hInst, MAKEINTRESOURCE(IDI_APP_ICON));
     nidApp.uCallbackMessage = WM_USER_SHELLICON;
