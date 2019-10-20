@@ -253,6 +253,11 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             return DefWindowProc(hWnd, message, wParam, lParam);
         }
         break;
+    case WM_DISPLAYCHANGE:
+        Shell_NotifyIcon(NIM_DELETE, &nidApp);
+        SetState(hInst, nidApp, HookDll::Disabled());
+        Shell_NotifyIcon(NIM_ADD, &nidApp);
+        return DefWindowProc(hWnd, message, wParam, lParam);
     /*
     case WM_PAINT:
         hdc = BeginPaint(hWnd, &ps);
