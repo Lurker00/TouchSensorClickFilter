@@ -49,9 +49,21 @@ int APIENTRY _tWinMain(HINSTANCE hInstance,
     EventReporter reporter(szWindowClass);
 
     // Only one instance is allowed:
+    static const TCHAR szStop[] = _T("stop");
     if (FindWindow(szWindowClass, szTitle) != NULL)
     {
-        reporter.Report(_T("Already running, quit"), EventReporter::eAlreadyRunning, EVENTLOG_WARNING_TYPE);
+        if (_tcsstr(lpCmdLine, szStop) != NULL)
+        {
+            PostMessage(FindWindow(szWindowClass, szTitle), WM_COMMAND, IDM_EXIT, 0);
+            reporter.Report(_T("Found running instance, quit"), EventReporter::eStop, EVENTLOG_INFORMATION_TYPE);
+        }
+        else
+            reporter.Report(_T("Already running, quit"), EventReporter::eAlreadyRunning, EVENTLOG_WARNING_TYPE);
+        return 0;
+    }
+    if (_tcsstr(lpCmdLine, szStop) != NULL)
+    {
+        reporter.Report(_T("Nothing to stop, quit"), EventReporter::eStop, EVENTLOG_WARNING_TYPE);
         return 0;
     }
 
